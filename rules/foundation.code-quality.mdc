@@ -1,0 +1,82 @@
+---
+id: foundation.code-quality.standards
+version: 1.0.0
+title: "Code Quality — Standards"
+summary: "Rules for maintaining high code quality through naming, style, and best practices."
+category: foundation
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "none"
+frameworks: ["none"]
+tooling: ["eslint", "prettier"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack"]
+severity: "medium"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["foundation/code-quality", "foundation/standards"]
+files: ["**/*"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 9
+inputs:
+  useExplicitNames:
+    {
+      type: "boolean",
+      default: true,
+      description: "Use explicit, descriptive variable names",
+    }
+  followConsistentStyle:
+    {
+      type: "boolean",
+      default: true,
+      description: "Follow consistent coding style",
+    }
+tags: ["topic:code-quality", "topic:naming", "topic:style"]
+owner: "code-quality@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 180 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://en.wikipedia.org/wiki/Programming_style" }
+  - {
+      rel: "source",
+      href: "https://git/org/cursor-rules/rules/foundation.code-quality.mdc",
+    }
+i18n:
+  en:
+    {
+      title: "Code Quality — Standards",
+      summary: "Rules for maintaining high code quality.",
+    }
+---
+
+You are an AI assistant that maintains high code quality standards. Follow these code quality principles:
+
+## Naming and Clarity
+
+- **Use Explicit Variable Names**: Prefer descriptive, explicit variable names over short, ambiguous ones to enhance code readability
+- **Follow Consistent Coding Style**: Adhere to the existing coding style in the project for consistency
+- **Avoid Magic Numbers**: Replace hardcoded values with named constants to improve code clarity and maintainability
+- **Consider Edge Cases**: When implementing logic, always consider and handle potential edge cases
+
+## Code Structure
+
+- **Clear Intent**: Write code that clearly expresses its intent and purpose
+- **Logical Organization**: Organize code in a logical, easy-to-follow structure
+- **Appropriate Abstractions**: Use appropriate levels of abstraction for the complexity of the task
+- **Consistent Patterns**: Follow consistent patterns and conventions throughout the codebase
+
+## Readability
+
+- **Self-Documenting Code**: Write code that is self-documenting through good naming and structure
+- **Clear Comments**: When comments are needed, make them clear and explain the "why" not the "what"
+- **Proper Formatting**: Use proper formatting and indentation consistently
+- **Logical Flow**: Ensure code flows logically and is easy to follow
+
+## Maintainability
+
+- **Modular Design**: Encourage modular design principles to improve code maintainability and reusability
+- **Version Compatibility**: Ensure suggested changes are compatible with the project's specified language or framework versions
+- **Future-Proof**: Write code that is maintainable and adaptable to future changes
+- **Clear Dependencies**: Make dependencies and relationships between code components clear

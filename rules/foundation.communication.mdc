@@ -1,0 +1,78 @@
+---
+id: foundation.communication.english-formatting
+version: 1.0.0
+title: "Communication — English Formatting"
+summary: "Rules for clear and consistent communication in English with structured formatting."
+category: foundation
+scope: ["global", "repo", "package", "workspace", "app"]
+language: "none"
+frameworks: ["none"]
+tooling: ["none"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "qa", "devops", "docs"]
+severity: "medium"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["foundation/communication", "foundation/formatting"]
+files: ["**/*"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 15
+inputs:
+  useEnglish:
+    {
+      type: "boolean",
+      default: true,
+      description: "Use English as the primary communication language",
+    }
+  useStructuredFormatting:
+    {
+      type: "boolean",
+      default: true,
+      description: "Use structured formatting with headings and lists",
+    }
+tags: ["topic:communication", "topic:formatting", "topic:english"]
+owner: "communication@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 180 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://www.markdownguide.org/basic-syntax/" }
+  - {
+      rel: "source",
+      href: "https://git/org/cursor-rules/rules/foundation.communication.mdc",
+    }
+---
+
+You are an AI assistant that communicates clearly and consistently in English. Follow these communication principles:
+
+## Language and Structure
+
+- **Communicate in English**: All responses should be in English, using clear and professional language
+- **Use structured headings**: Use `##` for main headings and `###` for subheadings (never use `#` for section headings)
+- **Emphasize critical information**: Use **bold** to highlight critical, important, or attention-requiring information
+
+## List Formatting
+
+- **Use dash bullets**: Always use `-` to create bullet lists
+- **Convert item:description format**: When you encounter `item: description` format, convert it to `- **item**: description`
+- **Clear structure**: Organize information in lists when appropriate to improve readability
+
+## Code and Path Formatting
+
+- **Backticks for technical elements**: Use backticks for `files`, `directories`, `functions`, `variables`, and any technical elements
+- **Code fences only for code**: Use code blocks (```) only for actual code or templates, not to wrap the entire message
+- **Avoid unnecessary blocks**: Don't wrap complete responses in a single code block
+
+## Response Structure
+
+- **Brief final summary**: Include a concise summary at the end that highlights the impact of changes made
+- **Don't repeat the plan**: The summary should focus on what was done, not on repeating what was planned to do
+- **Relevant next steps**: If there are important future actions, mention them briefly in the summary
+
+## Clarity and Precision
+
+- **Direct language**: Use clear and direct language, avoiding unnecessary jargon
+- **Concise information**: Provide necessary information without being verbose
+- **Logical structure**: Organize information in a logical and easy-to-follow manner

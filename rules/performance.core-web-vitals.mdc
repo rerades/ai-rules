@@ -1,0 +1,56 @@
+---
+id: performance.core-web-vitals
+version: 1.3.2
+title: "Core Web Vitals (LCP/INP/CLS) — baseline"
+summary: "Rules and minimum budgets for LCP ≤ 2.5s (p75), INP ≤ 200ms (p75), CLS ≤ 0.1."
+category: performance
+scope: ["app", "page", "route", "ci"]
+language: "none"
+frameworks: ["react", "astro", "next", "remix", "lit", "none"]
+tooling: ["lighthouse", "lhci", "playwright"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "qa", "devops"]
+severity: "high"
+requires: ["foundation.baseline.web"]
+conflicts: ["performance.legacy-metrics"]
+supersedes: ["performance.core-web-vitals@<=1.2.0"]
+bundles: ["baseline/web", "baseline/perf"]
+files: ["**/*"]
+enforcement: { lint: "off", ci: "block", scaffold: "add" }
+order: 40
+inputs:
+  lcpBudgetMs: { type: "number", default: 2500, description: "LCP p75 (ms)" }
+  inpBudgetMs: { type: "number", default: 200, description: "INP p75 (ms)" }
+  clsBudget: { type: "number", default: 0.1, description: "CLS p75" }
+tags: ["topic:core-web-vitals", "perf:lhci"]
+owner: "webperf@tu-org.com"
+review: { lastReviewed: "2025-08-20", reviewCycleDays: 90 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://web.dev/vitals/" }
+  - { rel: "adr", href: "https://git/org/adr/005-performance-budgets.md" }
+  - {
+      rel: "source",
+      href: "https://git/org/cursor-rules/rules/performance.core-web-vitals.mdc",
+    }
+i18n:
+  en: { title: "Core Web Vitals — baseline", summary: "LCP/INP/CLS budgets." }
+---
+
+## Core Web Vitals (baseline)
+
+**Goal:** meet `LCP ≤ {{ lcpBudgetMs }}ms`, `INP ≤ {{ inpBudgetMs }}ms`, `CLS ≤ {{ clsBudget }}` (p75).
+
+## Rules
+
+1. **LCP Images**: `<img fetchpriority="high">` and `preload` if applicable.
+2. **Fonts**: `font-display: swap`, preload if blocking LCP.
+3. **INP**: avoid heavy listeners on global bubbling; disable `pointer-events` on long animations, etc.
+4. **CLS**: reserve space (width/height), avoid late injections.
+
+## CI (LHCI)
+
+- Add `lighthouserc.json` with budgets of `{{ lcpBudgetMs }}` / `{{ inpBudgetMs }}` / `{{ clsBudget }}`.
+- Pipeline fails if not met (`ci: block`).

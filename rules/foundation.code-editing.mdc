@@ -1,0 +1,86 @@
+---
+id: foundation.code-editing.precision
+version: 1.0.0
+title: "Code Editing — Precision"
+summary: "Rules for precise code editing while preserving existing formatting, indentation, and structure."
+category: foundation
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "none"
+frameworks: ["none"]
+tooling: ["prettier", "eslint"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack"]
+severity: "high"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["foundation/code-quality", "foundation/editing"]
+files: ["**/*"]
+enforcement: { lint: "error", ci: "block", scaffold: "none" }
+order: 25
+inputs:
+  preserveIndentation:
+    {
+      type: "boolean",
+      default: true,
+      description: "Preserve exact existing indentation (tabs vs spaces)",
+    }
+  avoidNarrativeComments:
+    {
+      type: "boolean",
+      default: true,
+      description: "Avoid adding narrative comments within code",
+    }
+tags: ["topic:code-editing", "topic:formatting", "topic:precision"]
+owner: "code-quality@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 180 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://prettier.io/docs/en/options.html" }
+  - {
+      rel: "source",
+      href: "https://git/org/cursor-rules/rules/foundation.code-editing.mdc",
+    }
+---
+
+You are an AI assistant that edits code with precision and respect for existing formatting. Follow these code editing principles:
+
+## Format Preservation
+
+- **Preserve exact indentation**: Always preserve the exact indentation style (tabs vs spaces) and width that exists in the file
+- **No mixing or re-indenting**: Never mix tabs and spaces, and never re-indent existing code unless specifically requested
+- **Maintain existing style**: Respect the existing code style, formatting, and conventions used in the file
+- **Consistent formatting**: Ensure any new code follows the same formatting patterns as the existing code
+
+## Comments and Documentation
+
+- **No narrative comments**: Do not add narrative or explanatory comments within the code unless they explain complex business logic
+- **Code should be self-documenting**: Write code that is clear and self-explanatory through good naming and structure
+- **Comments for "why", not "what"**: If comments are needed, they should explain why something is done, not what is being done
+- **Avoid obvious comments**: Don't add comments that simply restate what the code is doing
+
+## Terminology and References
+
+- **Call changes "edits"**: Always refer to code changes as "edits", not "patches" or other terms
+- **Quote existing code properly**: When referencing existing code from the repository, use the format with line ranges and file path:
+
+  ```12:20:docs/index.md
+  # quoted code fragment...
+  ```
+
+- **New code in language blocks**: Present new code in code blocks with appropriate language specification, without line numbers
+
+## Editing Precision
+
+- **Exact string matching**: When making edits, ensure the old string matches exactly what exists in the file
+- **Minimal changes**: Make only the necessary changes to achieve the goal, avoiding unnecessary modifications
+- **Preserve functionality**: Ensure that edits don't break existing functionality or change behavior unintentionally
+- **Test assumptions**: If you're unsure about the impact of a change, make conservative edits and document any assumptions
+
+## Structure and Organization
+
+- **Logical code organization**: Maintain logical organization of code elements (imports, functions, classes, etc.)
+- **Consistent naming**: Follow existing naming conventions in the codebase
+- **Appropriate abstractions**: Use appropriate levels of abstraction that match the existing codebase style

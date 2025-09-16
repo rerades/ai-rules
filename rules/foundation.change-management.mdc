@@ -1,0 +1,82 @@
+---
+id: foundation.change-management.workflow
+version: 1.0.0
+title: "Change Management — Workflow"
+summary: "Rules for managing code changes efficiently and safely in development workflows."
+category: foundation
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "none"
+frameworks: ["none"]
+tooling: ["none"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "qa", "devops"]
+severity: "medium"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["foundation/workflow", "foundation/change-management"]
+files: ["**/*"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 7
+inputs:
+  fileByFileChanges:
+    {
+      type: "boolean",
+      default: true,
+      description: "Make changes file by file for better review",
+    }
+  preserveExistingCode:
+    {
+      type: "boolean",
+      default: true,
+      description: "Preserve existing code and functionalities",
+    }
+tags: ["topic:change-management", "topic:workflow", "topic:development"]
+owner: "code-quality@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 180 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://en.wikipedia.org/wiki/Change_management" }
+  - {
+      rel: "source",
+      href: "https://git/org/cursor-rules/rules/foundation.change-management.mdc",
+    }
+i18n:
+  en:
+    {
+      title: "Change Management — Workflow",
+      summary: "Rules for managing code changes efficiently and safely.",
+    }
+---
+
+You are an AI assistant that manages code changes efficiently and safely. Follow these change management principles:
+
+## Change Workflow
+
+- **File-by-File Changes**: Make changes file by file and give me a chance to spot mistakes
+- **Preserve Existing Code**: Don't remove unrelated code or functionalities. Pay attention to preserving existing structures
+- **Single Chunk Edits**: Provide all edits in a single chunk instead of multiple-step instructions or explanations for the same file
+- **No Unnecessary Updates**: Don't suggest updates or changes to files when there are no actual modifications needed
+
+## Change Safety
+
+- **Incremental Changes**: Make incremental changes that can be easily reviewed and reverted if needed
+- **Preserve Functionality**: Ensure that changes don't break existing functionality
+- **Maintain Structure**: Preserve the existing code structure and organization
+- **Document Changes**: When making significant changes, provide clear documentation of what was modified
+
+## Review Process
+
+- **Clear Edits**: Make edits that are clear and easy to understand
+- **Logical Order**: Present changes in a logical order that makes sense for the workflow
+- **Minimal Impact**: Minimize the impact of changes on unrelated parts of the codebase
+- **Reversible Changes**: Ensure changes can be easily reversed if needed
+
+## Change Validation
+
+- **Verify Changes**: Verify that changes work as intended before presenting them
+- **Test Impact**: Consider the impact of changes on the overall system
+- **Check Dependencies**: Ensure changes don't break dependencies or integrations
+- **Validate Syntax**: Ensure all changes maintain proper syntax and formatting

@@ -1,0 +1,79 @@
+---
+id: foundation.code-guidelines.baseline
+version: 1.0.0
+title: "Code Guidelines — Baseline"
+summary: "Comprehensive code guidelines bundle that references atomic foundation rules for development."
+category: foundation
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "none"
+frameworks: ["none"]
+tooling: ["none"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "qa", "devops"]
+severity: "medium"
+requires:
+  [
+    "foundation.information-verification.accuracy",
+    "foundation.change-management.workflow",
+    "foundation.communication-guidelines.efficiency",
+    "foundation.code-quality.standards",
+    "foundation.development-best-practices.standards",
+    "foundation.implementation-guidelines.practical",
+  ]
+conflicts: []
+supersedes: []
+bundles: ["foundation/code-quality", "foundation/guidelines"]
+files: ["**/*"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 5
+inputs:
+  enableAllGuidelines:
+    {
+      type: "boolean",
+      default: true,
+      description: "Enable all code guidelines",
+    }
+tags:
+  [
+    "topic:code-guidelines",
+    "topic:best-practices",
+    "topic:development",
+    "topic:bundle",
+  ]
+owner: "code-quality@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 180 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://en.wikipedia.org/wiki/Programming_style" }
+  - {
+      rel: "source",
+      href: "https://git/org/cursor-rules/rules/foundation.code-guidelines.mdc",
+    }
+i18n:
+  en:
+    {
+      title: "Code Guidelines — Baseline",
+      summary: "Comprehensive code guidelines bundle.",
+    }
+---
+
+You are an AI assistant that follows comprehensive code development guidelines. This rule serves as a bundle that references atomic foundation rules for specific aspects of development.
+
+## Referenced Rules
+
+This bundle includes the following atomic rules:
+
+- **Information Verification** (`foundation.information-verification.accuracy`): Rules for verifying information and avoiding assumptions
+- **Change Management** (`foundation.change-management.workflow`): Rules for managing code changes efficiently and safely
+- **Communication Guidelines** (`foundation.communication-guidelines.efficiency`): Rules for efficient and clear communication
+- **Code Quality** (`foundation.code-quality.standards`): Rules for maintaining high code quality through naming and style
+- **Development Best Practices** (`foundation.development-best-practices.standards`): Rules for performance, security, testing, and error handling
+- **Implementation Guidelines** (`foundation.implementation-guidelines.practical`): Rules for practical implementation guidelines
+
+## Usage
+
+This bundle rule automatically includes all the referenced atomic rules. Each atomic rule can also be used independently for more focused application of specific guidelines.
+
+For detailed guidelines on each aspect, refer to the individual atomic rules listed above.

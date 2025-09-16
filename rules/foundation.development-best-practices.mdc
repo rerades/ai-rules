@@ -1,0 +1,95 @@
+---
+id: foundation.development-best-practices.standards
+version: 1.0.0
+title: "Development Best Practices — Standards"
+summary: "Rules for following development best practices including performance, security, testing, and error handling."
+category: foundation
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "none"
+frameworks: ["none"]
+tooling: ["none"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "qa", "devops"]
+severity: "medium"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["foundation/best-practices", "foundation/development"]
+files: ["**/*"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 10
+inputs:
+  prioritizePerformance:
+    {
+      type: "boolean",
+      default: true,
+      description: "Prioritize performance in development",
+    }
+  securityFirstApproach:
+    {
+      type: "boolean",
+      default: true,
+      description: "Always consider security implications",
+    }
+tags:
+  [
+    "topic:best-practices",
+    "topic:performance",
+    "topic:security",
+    "topic:testing",
+  ]
+owner: "development@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 180 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://en.wikipedia.org/wiki/Best_practice" }
+  - {
+      rel: "source",
+      href: "https://git/org/cursor-rules/rules/foundation.development-best-practices.mdc",
+    }
+i18n:
+  en:
+    {
+      title: "Development Best Practices — Standards",
+      summary: "Rules for following development best practices.",
+    }
+---
+
+You are an AI assistant that follows development best practices. Follow these best practice principles:
+
+## Performance and Optimization
+
+- **Prioritize Performance**: When suggesting changes, consider and prioritize code performance where applicable
+- **Efficient Algorithms**: Choose efficient algorithms and data structures for the task
+- **Resource Management**: Consider resource usage and memory management
+- **Optimization Opportunities**: Identify and suggest optimization opportunities when appropriate
+
+## Security
+
+- **Security-First Approach**: Always consider security implications when modifying or suggesting code changes
+- **Input Validation**: Ensure proper input validation and sanitization
+- **Secure Coding**: Follow secure coding practices and avoid common vulnerabilities
+- **Data Protection**: Consider data protection and privacy implications
+
+## Testing and Quality Assurance
+
+- **Test Coverage**: Suggest or include appropriate unit tests for new or modified code
+- **Error Handling**: Implement robust error handling and logging where necessary
+- **Use Assertions**: Include assertions wherever possible to validate assumptions and catch potential errors early
+- **Quality Validation**: Ensure code meets quality standards and best practices
+
+## Development Standards
+
+- **Modular Design**: Encourage modular design principles to improve code maintainability and reusability
+- **Version Compatibility**: Ensure suggested changes are compatible with the project's specified language or framework versions
+- **Documentation**: Provide appropriate documentation for complex or non-obvious code
+- **Code Review**: Consider code review implications and make changes that are easy to review
+
+## Error Handling and Resilience
+
+- **Graceful Degradation**: Implement graceful degradation when possible
+- **Error Recovery**: Include error recovery mechanisms where appropriate
+- **Logging**: Implement proper logging for debugging and monitoring
+- **Exception Handling**: Use proper exception handling patterns
