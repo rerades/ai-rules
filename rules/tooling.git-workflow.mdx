@@ -1,0 +1,457 @@
+---
+id: tooling.git-workflow.conventions
+version: 1.0.0
+title: "Git Workflow Conventions"
+summary: "Conventions for branches, commits, and pull requests adapted to remote repository rules and best practices."
+category: tooling
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "none"
+frameworks: ["none"]
+tooling: ["git", "github", "gitlab"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "qa", "devops"]
+severity: "medium"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["tooling/git", "tooling/workflow"]
+files: ["**/*"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 35
+inputs:
+  enforceBranchNaming:
+    {
+      type: "boolean",
+      default: true,
+      description: "Enforce branch naming conventions",
+    }
+  useConventionalCommits:
+    {
+      type: "boolean",
+      default: true,
+      description: "Use conventional commit message format",
+    }
+  autoCreatePRs:
+    {
+      type: "boolean",
+      default: true,
+      description: "Automatically create PRs when main is protected",
+    }
+  noAutoPush:
+    {
+      type: "boolean",
+      default: true,
+      description: "Never automatically push to remote branches",
+    }
+tags:
+  [
+    "topic:git",
+    "topic:workflow",
+    "topic:branches",
+    "topic:commits",
+    "topic:pull-requests",
+  ]
+owner: "devops@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://www.conventionalcommits.org/" }
+  - { rel: "docs", href: "https://git-scm.com/docs/git-branch" }
+  - {
+      rel: "related",
+      href: "foundation.change-management.workflow",
+      title: "Change Management — Workflow",
+    }
+---
+
+# Git Workflow Conventions
+
+Conventions for branches, commits, and pull requests adapted to remote repository rules and best practices.
+
+## Branch Management
+
+### Branch Creation and Push Rules
+
+- **Never push automatically**: Under no circumstances should you push to remote branches
+- **Leave pushing to the user**: Always let the user handle the push operation
+- **No branch creation needed**: Don't create branches unless explicitly requested
+
+### Branch Naming Conventions
+
+Use the following regex pattern for branch names:
+
+```regex
+^(feat|fix|docs|chore|config)/(([A-Z0-9]{1,10})-?)[A-Z0-9]+-\d+.*|develop|features|staging|dependabot/.*
+```
+
+#### Valid Branch Names
+
+```bash
+# Feature branches
+feat/PROJ-123-add-user-authentication
+feat/API-456-implement-payment-gateway
+
+# Fix branches
+fix/BUG-789-resolve-memory-leak
+fix/UI-101-fix-responsive-layout
+
+# Documentation branches
+docs/README-202-update-installation-guide
+docs/API-303-add-endpoint-documentation
+
+# Chore branches
+chore/DEPS-404-update-dependencies
+chore/CI-505-improve-build-pipeline
+
+# Configuration branches
+config/ENV-606-update-environment-variables
+config/DOCKER-707-optimize-container-setup
+
+# Special branches
+develop
+features
+staging
+dependabot/npm-and-yarn/package-lock.json
+```
+
+#### Invalid Branch Names
+
+```bash
+# ❌ Bad: Missing type prefix
+user-authentication
+PROJ-123-feature
+
+# ❌ Bad: Wrong format
+feature/user-auth
+fix/bug-123
+
+# ❌ Bad: Missing ticket number
+feat/add-authentication
+fix/resolve-issue
+```
+
+## Commit Conventions
+
+### Conventional Commit Format
+
+Use the format: `type(scope?): subject`
+
+#### Commit Types
+
+- **feat**: New features
+- **fix**: Bug fixes
+- **docs**: Documentation changes
+- **style**: Code style changes (formatting, etc.)
+- **refactor**: Code refactoring
+- **test**: Adding or updating tests
+- **chore**: Maintenance tasks
+- **ci**: CI/CD changes
+- **perf**: Performance improvements
+- **build**: Build system changes
+
+#### Examples
+
+```bash
+# ✅ Good: Feature commits
+feat(auth): add user authentication
+feat(api): implement payment gateway integration
+feat(ui): add dark mode toggle
+
+# ✅ Good: Fix commits
+fix(login): resolve authentication timeout
+fix(api): handle null response in user service
+fix(ui): correct button alignment on mobile
+
+# ✅ Good: Documentation commits
+docs(readme): update installation instructions
+docs(api): add endpoint documentation
+docs(guide): improve getting started guide
+
+# ✅ Good: Chore commits
+chore(deps): update dependencies to latest versions
+chore(ci): improve build pipeline configuration
+chore(config): update environment variables
+
+# ✅ Good: With scope
+feat(user): add profile management
+fix(payment): resolve currency conversion bug
+docs(api): update authentication endpoints
+```
+
+#### Invalid Commits
+
+```bash
+# ❌ Bad: Missing type
+add user authentication
+fix bug in login
+update documentation
+
+# ❌ Bad: Wrong format
+feat: add user authentication
+fix: resolve login bug
+docs: update readme
+
+# ❌ Bad: Too vague
+fix: bug
+feat: feature
+docs: update
+```
+
+## Pull Request Workflow
+
+### Automatic PR Creation
+
+- **Protected main rule**: If `main` branch is protected or has rulesets, automatically create a branch and PR
+- **Branch creation**: Create feature branch following naming conventions
+- **PR description**: Include brief description, checklist, and task links if applicable
+
+### PR Description Template
+
+```markdown
+## Description
+
+Brief description of changes made.
+
+## Type of Change
+
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Checklist
+
+- [ ] Code follows project style guidelines
+- [ ] Self-review completed
+- [ ] Code is properly commented
+- [ ] Tests added/updated
+- [ ] Documentation updated
+- [ ] No breaking changes (or documented)
+
+## Related Issues
+
+Closes #123
+Related to #456
+
+## Additional Notes
+
+Any additional context or notes for reviewers.
+```
+
+### PR Best Practices
+
+```markdown
+# ✅ Good PR Description
+
+## Description
+
+Implements user authentication system with JWT tokens and role-based access control.
+
+## Type of Change
+
+- [x] New feature
+- [ ] Bug fix
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Checklist
+
+- [x] Code follows project style guidelines
+- [x] Self-review completed
+- [x] Code is properly commented
+- [x] Tests added/updated
+- [x] Documentation updated
+- [x] No breaking changes
+
+## Related Issues
+
+Closes #123
+Implements requirements from #456
+
+## Additional Notes
+
+- Added comprehensive test coverage
+- Updated API documentation
+- Includes migration scripts for existing users
+```
+
+## Git Flow Examples
+
+### Feature Development
+
+```bash
+# 1. Create feature branch
+git checkout -b feat/AUTH-123-add-user-authentication
+
+# 2. Make changes and commit
+git add .
+git commit -m "feat(auth): add user authentication system"
+git commit -m "feat(auth): implement JWT token validation"
+git commit -m "test(auth): add authentication unit tests"
+
+# 3. Push branch (user handles this)
+git push origin feat/AUTH-123-add-user-authentication
+
+# 4. Create PR (automatically if main is protected)
+# PR will be created with proper description and checklist
+```
+
+### Bug Fix Workflow
+
+```bash
+# 1. Create fix branch
+git checkout -b fix/BUG-456-resolve-login-timeout
+
+# 2. Make changes and commit
+git add .
+git commit -m "fix(auth): resolve login timeout issue"
+git commit -m "test(auth): add timeout test cases"
+
+# 3. Push and create PR
+git push origin fix/BUG-456-resolve-login-timeout
+# PR automatically created with bug fix template
+```
+
+### Documentation Updates
+
+```bash
+# 1. Create docs branch
+git checkout -b docs/README-789-update-installation
+
+# 2. Update documentation
+git add .
+git commit -m "docs(readme): update installation instructions"
+git commit -m "docs(api): add authentication endpoint docs"
+
+# 3. Push and create PR
+git push origin docs/README-789-update-installation
+```
+
+## Branch Protection Rules
+
+### When Main is Protected
+
+```bash
+# ✅ Automatic workflow
+1. Detect protected main branch
+2. Create feature branch with proper naming
+3. Make changes and commit with conventional format
+4. Push branch to remote
+5. Create PR with template description
+6. Link to related issues/tasks
+```
+
+### When Main is Not Protected
+
+```bash
+# ⚠️ Manual workflow
+1. Create feature branch
+2. Make changes and commit
+3. Let user handle push and merge
+4. Provide guidance on PR creation if needed
+```
+
+## Common Patterns
+
+### Feature Branch Pattern
+
+```bash
+# Pattern: feat/PROJECT-TICKET-description
+feat/AUTH-123-add-oauth-integration
+feat/PAY-456-implement-stripe-payments
+feat/UI-789-add-responsive-navigation
+```
+
+### Fix Branch Pattern
+
+```bash
+# Pattern: fix/PROJECT-TICKET-description
+fix/AUTH-123-resolve-token-expiry
+fix/PAY-456-fix-currency-conversion
+fix/UI-789-correct-mobile-layout
+```
+
+### Documentation Pattern
+
+```bash
+# Pattern: docs/PROJECT-TICKET-description
+docs/API-123-update-endpoint-docs
+docs/README-456-improve-setup-guide
+docs/CONFIG-789-add-environment-vars
+```
+
+## Integration with CI/CD
+
+### Automated Checks
+
+```yaml
+# .github/workflows/git-conventions.yml
+name: Git Convention Checks
+on: [push, pull_request]
+
+jobs:
+  check-conventions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check branch naming
+        run: |
+          if [[ ! ${{ github.ref_name }} =~ ^(feat|fix|docs|chore|config)/(([A-Z0-9]{1,10})-?)[A-Z0-9]+-\d+.*|develop|features|staging|dependabot/.* ]]; then
+            echo "Branch name does not follow convention"
+            exit 1
+          fi
+      - name: Check commit messages
+        uses: conventional-commits/action@v1
+```
+
+## Anti-patterns to Avoid
+
+### ❌ Don't: Push Automatically
+
+```bash
+# ❌ Bad: Automatic push
+git push origin feature-branch
+
+# ✅ Good: Let user handle push
+# Provide instructions or guidance
+echo "Ready to push. Run: git push origin feature-branch"
+```
+
+### ❌ Don't: Create Branches Unnecessarily
+
+```bash
+# ❌ Bad: Creating branches for simple changes
+git checkout -b fix-typo
+git commit -m "fix: typo in comment"
+git push origin fix-typo
+
+# ✅ Good: Direct commit for simple changes
+git commit -m "docs: fix typo in README"
+# Let user handle the workflow
+```
+
+### ❌ Don't: Use Vague Commit Messages
+
+```bash
+# ❌ Bad: Vague messages
+git commit -m "fix bug"
+git commit -m "add feature"
+git commit -m "update"
+
+# ✅ Good: Specific messages
+git commit -m "fix(auth): resolve token validation timeout"
+git commit -m "feat(payment): add Stripe integration"
+git commit -m "docs(api): update authentication endpoints"
+```
+
+## Remember
+
+1. **Never push automatically**: Always let the user handle remote operations
+2. **Follow naming conventions**: Use the regex pattern for branch names
+3. **Use conventional commits**: Follow the `type(scope): subject` format
+4. **Create PRs when needed**: Automatically create PRs for protected main branches
+5. **Include proper descriptions**: Use templates for PR descriptions
+6. **Link related issues**: Always reference tickets or issues when applicable
+7. **Respect branch protection**: Adapt workflow based on repository rules

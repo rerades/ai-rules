@@ -1,0 +1,409 @@
+---
+id: foundation.safe-code-modification.rules
+version: 1.0.0
+title: "Safe Code Modification Rules"
+summary: "Rules for ensuring safe and consistent code modifications with proper context understanding and data preservation."
+category: foundation
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "none"
+frameworks: ["none"]
+tooling: ["none"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "qa", "devops"]
+severity: "high"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["foundation/safety", "foundation/code-modification"]
+files: ["**/*"]
+enforcement: { lint: "error", ci: "block", scaffold: "none" }
+order: 12
+inputs:
+  enforceContextFirst:
+    {
+      type: "boolean",
+      default: true,
+      description: "Always read and understand complete context before modifications",
+    }
+  preserveDataElements:
+    {
+      type: "boolean",
+      default: true,
+      description: "Ensure all data display elements remain intact during modifications",
+    }
+  stayWithinScope:
+    {
+      type: "boolean",
+      default: true,
+      description: "Only modify code directly related to user's request",
+    }
+tags:
+  [
+    "topic:safety",
+    "topic:code-modification",
+    "topic:context",
+    "topic:data-preservation",
+  ]
+owner: "code-quality@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://en.wikipedia.org/wiki/Code_review" }
+  - {
+      rel: "related",
+      href: "foundation.change-management.workflow",
+      title: "Change Management — Workflow",
+    }
+  - {
+      rel: "related",
+      href: "foundation.code-editing.precision",
+      title: "Code Editing — Precision",
+    }
+---
+
+# Safe Code Modification Rules
+
+ENFORCE when MODIFYING CODE to ensure safe and consistent code modifications.
+
+## Context First
+
+- **ALWAYS read and understand the complete context** before making any modifications
+- Use available tools to search and read relevant code sections
+- Ensure understanding of dependencies and related components
+- If context is unclear, ask clarifying questions before proceeding
+
+### Context Analysis Steps
+
+1. **Read Complete Files**: Understand the full scope of files being modified
+2. **Identify Dependencies**: Map relationships between components
+3. **Understand Data Flow**: Trace how data moves through the system
+4. **Check Related Components**: Identify other parts that might be affected
+
+## Stay Within Scope
+
+- **Only modify code that is directly related** to the user's request
+- Do not make changes to unrelated components or files
+- If a change might affect other parts of the system, explicitly mention this to the user
+- When in doubt about scope, ask for clarification
+
+### Scope Boundaries
+
+```js
+// ✅ Good: Focused modification
+// User: "Update the button styling"
+// Only modify CSS classes and styling properties
+.button {
+  background-color: blue; /* Only this changed */
+  padding: 10px; /* Only this changed */
+}
+
+// ❌ Bad: Scope creep
+// User: "Update the button styling"
+// Don't modify unrelated functionality
+.button {
+  background-color: blue;
+  /* Don't add new event handlers */
+  /* Don't modify data processing logic */
+}
+```
+
+## Follow User Instructions
+
+- **Only implement changes that were explicitly requested** by the user
+- Do not add "nice to have" features without user approval
+- Do not refactor code unless specifically asked
+- If improvements are noticed, suggest them to the user instead of implementing them directly
+
+### Instruction Adherence
+
+```js
+// ✅ Good: Exact implementation
+// User: "Add validation to the email field"
+const emailInput = document.getElementById("email");
+emailInput.addEventListener("blur", validateEmail);
+
+// ❌ Bad: Adding unrequested features
+// User: "Add validation to the email field"
+const emailInput = document.getElementById("email");
+emailInput.addEventListener("blur", validateEmail);
+// Don't add: password strength checker
+// Don't add: form auto-save
+// Don't add: real-time validation
+```
+
+## Preserve Existing Code
+
+- **Never remove code unless explicitly requested** by the user
+- Keep existing comments and documentation intact
+- Maintain the original code style and formatting
+- Use `// ... existing code ...` comments to indicate unchanged sections
+
+### Code Preservation Examples
+
+```js
+// ✅ Good: Preserving existing code
+function processUser(user) {
+  // ... existing validation logic ...
+  const processedUser = {
+    ...user,
+    displayName: `${user.firstName} ${user.lastName}`, // Only this added
+  };
+  // ... existing return logic ...
+  return processedUser;
+}
+
+// ❌ Bad: Removing existing code
+function processUser(user) {
+  // Don't remove existing validation
+  // Don't remove existing error handling
+  return {
+    displayName: `${user.firstName} ${user.lastName}`,
+  };
+}
+```
+
+## Verification Steps
+
+### 1. Before Making Changes
+
+- Read all relevant code
+- Understand the context
+- Confirm the scope with available information
+- **Identify all data display elements and their sources**
+
+```js
+// Example: Identify data elements before modification
+// Template: {{ user.name }} - displays user name
+// Template: {{ user.email }} - displays user email
+// Template: {{ user.avatar }} - displays user avatar
+// Only modify styling, preserve all {{ }} elements
+```
+
+### 2. During Changes
+
+- Stay strictly within requested modifications
+- Preserve existing functionality
+- Document what is being changed
+- **Ensure all data display elements remain intact**
+
+```js
+// ✅ Good: Preserving data elements
+<div class="user-info">
+  <h2>{{ user.name }}</h2> <!-- Preserved -->
+  <p>{{ user.email }}</p>   <!-- Preserved -->
+  <img src="{{ user.avatar }}" /> <!-- Preserved -->
+</div>
+
+// ❌ Bad: Accidentally removing data elements
+<div class="user-info">
+  <h2>User Information</h2> <!-- Lost {{ user.name }} -->
+  <p>Contact details</p>     <!-- Lost {{ user.email }} -->
+</div>
+```
+
+### 3. After Changes
+
+- Verify changes match the user's request
+- Ensure no unintended modifications
+- **Validate all data is still being displayed**
+- Report what was changed to the user
+
+## Examples
+
+### ✅ Good Practice
+
+```bash
+User: "Update the styling of the user info section"
+Assistant: *reads entire section and identifies data elements*
+Assistant: *preserves all {{ $variable }} and data displays*
+Assistant: *only updates CSS classes and layout structure*
+```
+
+**Implementation:**
+
+```html
+<!-- Before -->
+<div class="user-info">
+  <h2>{{ user.name }}</h2>
+  <p>{{ user.email }}</p>
+</div>
+
+<!-- After: Only styling changed -->
+<div class="user-info updated-styling">
+  <h2 class="user-name">{{ user.name }}</h2>
+  <p class="user-email">{{ user.email }}</p>
+</div>
+```
+
+### ❌ Bad Practice
+
+```bash
+User: "Update the styling of the user info section"
+Assistant: *modifies section without checking data elements*
+Assistant: *accidentally removes {{ $variable }} displays*
+Assistant: *focuses only on visual improvements*
+```
+
+**Implementation:**
+
+```html
+<!-- Before -->
+<div class="user-info">
+  <h2>{{ user.name }}</h2>
+  <p>{{ user.email }}</p>
+</div>
+
+<!-- After: Data elements lost -->
+<div class="user-info new-styling">
+  <h2>User Information</h2>
+  <p>Contact details</p>
+</div>
+```
+
+## Data Display Element Preservation
+
+### Template Variables
+
+```js
+// ✅ Preserve all template variables
+const template = `
+  <div class="user-card">
+    <h3>{{ user.name }}</h3>
+    <p>{{ user.email }}</p>
+    <span>{{ user.role }}</span>
+  </div>
+`;
+
+// ❌ Don't remove template variables
+const template = `
+  <div class="user-card">
+    <h3>User Name</h3>
+    <p>Email Address</p>
+    <span>Role</span>
+  </div>
+`;
+```
+
+### Dynamic Content
+
+```js
+// ✅ Preserve dynamic content
+function renderUser(user) {
+  return `
+    <div class="user-info">
+      <h2>${user.name}</h2>
+      <p>${user.email}</p>
+      <img src="${user.avatar}" alt="${user.name}" />
+    </div>
+  `;
+}
+
+// ❌ Don't hardcode dynamic content
+function renderUser(user) {
+  return `
+    <div class="user-info">
+      <h2>John Doe</h2>
+      <p>john@example.com</p>
+      <img src="/default-avatar.png" alt="User" />
+    </div>
+  `;
+}
+```
+
+## Common Pitfalls to Avoid
+
+### ❌ Don't: Remove Data Bindings
+
+```js
+// ❌ Bad: Removing data bindings
+// Before: {{ user.name }}
+// After: "User Name"
+
+// ✅ Good: Preserving data bindings
+// Before: {{ user.name }}
+// After: {{ user.name }}
+```
+
+### ❌ Don't: Break Functionality
+
+```js
+// ❌ Bad: Breaking existing functionality
+function calculateTotal(items) {
+  // Removed validation logic
+  // Removed error handling
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+
+// ✅ Good: Preserving functionality
+function calculateTotal(items) {
+  // ... existing validation logic ...
+  // ... existing error handling ...
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+```
+
+### ❌ Don't: Change Behavior
+
+```js
+// ❌ Bad: Changing behavior
+// Before: Returns user object
+function getUser(id) {
+  return users.find((user) => user.id === id);
+}
+
+// After: Returns user name only
+function getUser(id) {
+  const user = users.find((user) => user.id === id);
+  return user ? user.name : null;
+}
+
+// ✅ Good: Preserving behavior
+function getUser(id) {
+  return users.find((user) => user.id === id);
+}
+```
+
+## Safety Checklist
+
+### Before Modifying Code
+
+- [ ] Read and understand complete context
+- [ ] Identify all data display elements
+- [ ] Map dependencies and relationships
+- [ ] Confirm scope of changes
+- [ ] Ask clarifying questions if needed
+
+### During Modification
+
+- [ ] Stay within requested scope
+- [ ] Preserve all data elements
+- [ ] Maintain existing functionality
+- [ ] Keep original code style
+- [ ] Document what is being changed
+
+### After Modification
+
+- [ ] Verify changes match request
+- [ ] Ensure no unintended modifications
+- [ ] Validate all data is still displayed
+- [ ] Test functionality if possible
+- [ ] Report changes to user
+
+## Integration with Other Rules
+
+This rule works in conjunction with:
+
+- **Change Management**: Provides the workflow for safe changes
+- **Code Editing**: Ensures precision in modifications
+- **Implementation Guidelines**: Offers practical implementation advice
+
+## Remember
+
+1. **Context is King**: Always understand before modifying
+2. **Scope Matters**: Only change what's requested
+3. **Data is Sacred**: Never remove data display elements
+4. **Functionality First**: Preserve existing behavior
+5. **Safety Over Speed**: Take time to verify changes
+6. **Communication is Key**: Report what was changed

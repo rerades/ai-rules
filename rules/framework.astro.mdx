@@ -1,173 +1,655 @@
 ---
-id: framework.astro.baseline
+id: framework.astro.guidelines
 version: 1.0.0
-title: "Astro Framework — baseline"
-summary: "Fundamental rules for Astro development: components, routing, performance, and best practices."
+title: "Astro Framework Guidelines"
+summary: "Comprehensive guidelines for Astro framework development including component architecture, performance optimization, and modern web practices."
 category: framework
-scope: ["app", "component", "page", "route"]
-language: "ts"
-frameworks: ["astro"]
-tooling: ["vite", "eslint", "prettier"]
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "javascript"
+frameworks: ["astro", "typescript"]
+tooling: ["astro", "typescript", "vite"]
 lifecycle: "enforced"
 maturity: "stable"
-stability: "evolving"
-audience: ["frontend", "fullstack"]
+stability: "locked"
+audience: ["frontend", "backend", "fullstack"]
 severity: "medium"
-requires: ["foundation.baseline.web"]
+requires: []
 conflicts: []
 supersedes: []
-bundles: ["baseline/astro", "framework/astro"]
-files: ["**/*.astro", "src/**/*.ts", "src/**/*.js", "astro.config.*"]
-enforcement: { lint: "warn", ci: "allow", scaffold: "add" }
-order: 20
+bundles: ["framework/astro", "framework/static-site"]
+files: ["**/*.astro", "**/*.astro.ts", "**/*.astro.js"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 40
 inputs:
-  useTypeScript:
+  enableTypeScript:
     {
       type: "boolean",
       default: true,
-      description: "Use TypeScript in the project",
+      description: "Enable TypeScript for enhanced developer experience",
     }
-  enableIntegrations:
+  prioritizeStaticGeneration:
     {
       type: "boolean",
       default: true,
-      description: "Enable official Astro integrations",
+      description: "Prioritize static generation over SSR when possible",
     }
-tags: ["topic:astro", "topic:static-generation", "perf:core-web-vitals"]
-owner: "astro-team@tu-org.com"
-review: { lastReviewed: "2025-01-20", reviewCycleDays: 120 }
+  optimizePerformance:
+    {
+      type: "boolean",
+      default: true,
+      description: "Optimize for Core Web Vitals and performance",
+    }
+  enforceAccessibility:
+    {
+      type: "boolean",
+      default: true,
+      description: "Ensure semantic HTML and proper ARIA implementation",
+    }
+tags:
+  ["topic:astro", "topic:static-site", "topic:performance", "topic:components"]
+owner: "frontend@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
 license: "MIT"
 links:
   - { rel: "docs", href: "https://docs.astro.build/" }
   - {
-      rel: "source",
-      href: "https://git/org/cursor-rules/rules/framework.astro.mdc",
+      rel: "docs",
+      href: "https://docs.astro.build/en/basics/project-structure/",
     }
-i18n:
-  en:
-    {
-      title: "Astro Framework — baseline",
-      summary: "Fundamental rules for Astro development.",
+  - {
+      rel: "docs",
+      href: "https://docs.astro.build/en/guides/content-collections/",
     }
 ---
 
+# Astro Framework Guidelines
+
 You are an expert in JavaScript, TypeScript, and Astro framework for scalable web development.
 
-## Key Principles
+## Core Principles
 
-- Write concise, technical responses with accurate Astro examples.
-- Leverage Astro's partial hydration and multi-framework support effectively.
-- Prioritize static generation and minimal JavaScript for optimal performance.
-- Use descriptive variable names and follow Astro's naming conventions.
-- Organize files using Astro's file-based routing system.
+- **Static-first**: Prioritize static generation and minimal JavaScript for optimal performance
+- **Component-driven**: Use Astro components as the primary building blocks
+- **Type-safe**: Leverage TypeScript for enhanced developer experience and type safety
+- **Performance-focused**: Optimize for Core Web Vitals and user experience
+- **Accessible**: Ensure semantic HTML and proper ARIA implementation
 
-## Astro Project Structure
+## Project Structure
 
-- Use the recommended Astro project structure:
-  - src/
-    - components/
-    - layouts/
-    - pages/
-    - styles/
-  - public/
-  - astro.config.mjs
+Follow project structure from Astro web age [Project Structure](https://docs.astro.build/en/basics/project-structure/)
+
+```
+src/
+├── components/          # Reusable Astro components
+├── layouts/            # Page layouts
+├── pages/              # File-based routing
+├── content/           # Content collections
+├── styles/            # Global styles
+├── public/            # Static assets
+└── integrations/      # Custom integrations
+```
 
 ## Component Development
 
-- Create .astro files for Astro components.
-- Do not use framework-specific components (React, Vue, Svelte) unless requested, favor the use of astro components.
-- Implement proper component composition and reusability.
-- Use Astro's component props for data passing.
-- Leverage Astro's built-in components like `Markdown` when appropriate.
+### Astro Component Structure
+
+```astro
+---
+// Component script (runs at build time)
+interface Props {
+  title: string;
+  description?: string;
+  variant?: "primary" | "secondary";
+}
+
+const { title, description, variant = "primary" } = Astro.props;
+---
+
+<div class={`component component--${variant}`}>
+  <h2>{title}</h2>
+  {description && <p>{description}</p>}
+</div>
+
+<style>
+  .component {
+    /* Scoped styles */
+  }
+</style>
+```
+
+### Component Guidelines
+
+- **Props Interface**: Always define TypeScript interfaces for component props
+- **Naming**: Use PascalCase for component filenames (`Button.astro`, `Card.astro`)
+- **Composition**: Favor composition over inheritance
+- **Scoped Styles**: Use component-scoped styles when possible
+- **Client Directives**: Use sparingly and with specific hydration strategies
+
+### Client-Side Hydration
+
+```astro
+<!-- Immediate hydration -->
+<Counter client:load />
+
+<!-- Hydrate when idle -->
+<SearchBox client:idle />
+
+<!-- Hydrate when visible -->
+<LazyComponent client:visible />
+
+<!-- Hydrate on media query -->
+<MobileMenu client:media="(max-width: 768px)" />
+```
 
 ## Routing and Pages
 
-- Utilize Astro's file-based routing system in the src/pages/ directory.
-- Implement dynamic routes using [...slug].astro syntax.
-- Use getStaticPaths() for generating static pages with dynamic routes.
-- Implement proper 404 handling with a 404.astro page.
+### File-based Routing
+
+```
+src/pages/
+├── index.astro           # /
+├── about.astro           # /about
+├── blog/
+│   ├── index.astro       # /blog
+│   └── [slug].astro      # /blog/[slug]
+└── [...catchall].astro   # Catch-all routes
+```
+
+### Dynamic Routes
+
+```astro
+---
+// [slug].astro
+export async function getStaticPaths() {
+  const posts = await Astro.glob("../content/posts/*.md");
+
+  return posts.map((post) => ({
+    params: { slug: post.frontmatter.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+---
+
+<Layout>
+  <h1>{post.frontmatter.title}</h1>
+  <Content />
+</Layout>
+```
 
 ## Content Management
 
-- Use Markdown (.md) or MDX (.mdx) files for content-heavy pages.
-- Leverage Astro's built-in support for frontmatter in Markdown files.
-- Implement content collections for organized content management.
+### Content Collections
 
-## Styling
+```typescript
+// src/content/config.ts
+import { defineCollection, z } from "astro:content";
 
-- Leverage global styles when necessary, importing them in layouts.
-- Do not use any kind of CSS preprocessing like Sass or Less.
-- Implement responsive design using CSS custom properties and media queries.
+const blog = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    publishDate: z.date(),
+    tags: z.array(z.string()),
+    draft: z.boolean().optional(),
+  }),
+});
+
+export const collections = { blog };
+```
+
+### Markdown/MDX Integration
+
+```astro
+---
+import { getCollection } from "astro:content";
+const posts = await getCollection("blog");
+---
+
+{posts.map((post) => (
+  <article>
+    <h2>{post.data.title}</h2>
+    <p>{post.data.description}</p>
+  </article>
+))}
+```
+
+## Styling Guidelines
+
+### CSS Architecture
+
+```astro
+---
+// Layout.astro
+---
+
+<html>
+  <head>
+    <!-- Global styles -->
+    <link rel="stylesheet" href="/styles/global.css" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style>
+  /* Component-scoped styles */
+  .layout {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+</style>
+```
+
+### CSS Best Practices
+
+- **Global Styles**: Import in layouts, not individual components
+- **CSS Custom Properties**: Use for theming and responsive design
+- **No Preprocessors**: Use native CSS features (custom properties, nesting)
+- **Scoped Styles**: Prefer component-scoped styles over global
 
 ## Performance Optimization
 
-- Minimize use of client-side JavaScript; leverage Astro's static generation.
-- Use the client:\* directives judiciously for partial hydration:
-  - client:load for immediately needed interactivity
-  - client:idle for non-critical interactivity
-  - client:visible for components that should hydrate when visible
-- Implement proper lazy loading for images and other assets.
-- Utilize Astro's built-in asset optimization features.
+### Image Optimization
 
-## Data Fetching
+```astro
+---
+import { Image } from "astro:assets";
+---
 
-- Use Astro.props for passing data to components.
-- Implement getStaticPaths() for fetching data at build time.
-- Use Astro.glob() for working with local files efficiently.
-- Implement proper error handling for data fetching operations.
+<Image
+  src="/hero.jpg"
+  alt="Hero image"
+  width={800}
+  height={600}
+  loading="lazy"
+  format="webp"
+/>
+```
+
+### Asset Optimization
+
+```astro
+---
+// Preload critical resources
+---
+
+<head>
+  <link
+    rel="preload"
+    href="/fonts/main.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link rel="preload" href="/styles/critical.css" as="style" />
+</head>
+```
+
+### Bundle Analysis
+
+```javascript
+// astro.config.mjs
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  build: {
+    inlineStylesheets: "auto",
+  },
+  vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ["react", "react-dom"],
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+## Data Fetching Patterns
+
+### Static Data
+
+```astro
+---
+// Fetch at build time
+const data = await fetch("https://api.example.com/posts");
+const posts = await data.json();
+---
+
+{posts.map((post) => (
+  <article>
+    <h2>{post.title}</h2>
+  </article>
+))}
+```
+
+### Dynamic Data
+
+```astro
+---
+// Server-side rendering
+const url = new URL(Astro.request.url);
+const id = url.searchParams.get("id");
+const post = await fetch(`https://api.example.com/posts/${id}`);
+---
+
+<article>
+  <h1>{post.title}</h1>
+  <Content />
+</article>
+```
 
 ## SEO and Meta Tags
 
-- Use Astro's `<head>` tag for adding meta information.
-- Implement canonical URLs for proper SEO.
-- Use the `<SEO>` component pattern for reusable SEO setups.
+### SEO Component
+
+```astro
+---
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  canonical?: string;
+}
+
+const { title, description, image, canonical } = Astro.props;
+const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site);
+---
+
+<head>
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+
+  {image && (
+    <>
+      <meta property="og:image" content={image} />
+      <meta name="twitter:card" content="summary_large_image" />
+    </>
+  )}
+</head>
+```
 
 ## Integrations and Plugins
 
-- Utilize Astro integrations for extending functionality (e.g., @astrojs/image).
-- Implement proper configuration for integrations in astro.config.mjs.
-- Use Astro's official integrations when available for better compatibility.
+### Essential Integrations
+
+```javascript
+// astro.config.mjs
+import { defineConfig } from "astro/config";
+import react from "@astrojs/react";
+import tailwind from "@astrojs/tailwind";
+import sitemap from "@astrojs/sitemap";
+
+export default defineConfig({
+  integrations: [react(), tailwind(), sitemap()],
+  site: "https://example.com",
+});
+```
+
+### Custom Integrations
+
+```javascript
+// src/integrations/custom.ts
+export default function customIntegration() {
+  return {
+    name: "custom-integration",
+    hooks: {
+      "astro:config:setup": ({ addRenderer }) => {
+        // Custom setup logic
+      },
+    },
+  };
+}
+```
+
+## Testing Strategy
+
+### Unit Testing
+
+```typescript
+// tests/components/Button.test.ts
+import { expect, test } from "vitest";
+import { render } from "@astrojs/testing-library";
+
+test("Button renders with correct text", async () => {
+  const { getByText } = await render("../src/components/Button.astro", {
+    props: { text: "Click me" },
+  });
+
+  expect(getByText("Click me")).toBeInTheDocument();
+});
+```
+
+### E2E Testing
+
+```typescript
+// tests/e2e/navigation.test.ts
+import { test, expect } from "@playwright/test";
+
+test("navigation works correctly", async ({ page }) => {
+  await page.goto("/");
+  await page.click('a[href="/about"]');
+  await expect(page).toHaveURL("/about");
+});
+```
+
+## Accessibility Guidelines
+
+### Semantic HTML
+
+```astro
+<main>
+  <header>
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section>
+    <h1>Page Title</h1>
+    <p>Content goes here</p>
+  </section>
+</main>
+```
+
+### ARIA Implementation
+
+```astro
+<button
+  aria-expanded={isOpen}
+  aria-controls="menu"
+  aria-label="Toggle navigation menu"
+>
+  Menu
+</button>
+
+<div id="menu" aria-hidden={!isOpen}>
+  <!-- Menu content -->
+</div>
+```
 
 ## Build and Deployment
 
-- Optimize the build process using Astro's build command.
-- Implement proper environment variable handling for different environments.
-- Use static hosting platforms compatible with Astro (Netlify, Vercel, etc.).
-- Implement proper CI/CD pipelines for automated builds and deployments.
+### Environment Configuration
 
-## Testing
+```javascript
+// astro.config.mjs
+export default defineConfig({
+  site:
+    process.env.NODE_ENV === "production"
+      ? "https://example.com"
+      : "http://localhost:4321",
+  output: process.env.NODE_ENV === "production" ? "static" : "server",
+});
+```
 
-- Implement unit tests for utility functions and helpers.
-- Use end-to-end testing tools like Web driverIO for testing the built site.
-- Implement visual regression testing if applicable with web driverIO.
+### Deployment Optimization
 
-## Accessibility
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+on:
+  push:
+    branches: [main]
 
-- Ensure proper semantic HTML structure in Astro components.
-- Implement ARIA attributes where necessary.
-- Ensure keyboard navigation support for interactive elements.
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/deploy-pages@v2
+```
+
+## Modern Astro Features
+
+### View Transitions
+
+```astro
+---
+// Enable in astro.config.mjs
+---
+
+<html>
+  <head>
+    <ViewTransitions />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+```
+
+### Content Collections
+
+```typescript
+// Advanced content collection with validation
+const blog = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    publishDate: z.date(),
+    tags: z.array(z.string()),
+    author: z.string(),
+    featured: z.boolean().optional(),
+  }),
+});
+```
+
+### Server Actions (Astro 4+)
+
+```astro
+---
+// Server action
+async function createPost(formData: FormData) {
+  "use server";
+
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+
+  // Save to database
+  await savePost({ title, content });
+
+  return { success: true };
+}
+---
+
+<form method="POST" action={createPost}>
+  <input name="title" placeholder="Post title" />
+  <textarea name="content" placeholder="Post content"></textarea>
+  <button type="submit">Create Post</button>
+</form>
+```
 
 ## Key Conventions
 
-1. Follow Astro's Style Guide for consistent code formatting.
-2. Use TypeScript for enhanced type safety and developer experience.
-3. Implement proper error handling and logging.
-4. Leverage Astro's RSS feed generation for content-heavy sites.
-5. Use Astro's Image component for optimized image delivery.
+1. **TypeScript First**: Use TypeScript for all components and utilities
+2. **Props Interface**: Always define `interface Props` for component props
+3. **Component Naming**: PascalCase for component filenames (`^[A-Z][a-zA-Z0-9]*\.astro$`)
+4. **Static Generation**: Prefer static generation over SSR when possible
+5. **Performance Budget**: Monitor Core Web Vitals and bundle size
+6. **Error Handling**: Implement proper error boundaries and fallbacks
+7. **Documentation**: Include JSDoc comments for complex functions
 
-Performance Metrics
+## Performance Metrics
 
-- Prioritize Core Web Vitals (LCP, FID, CLS) in development.
-- Use Lighthouse and WebPageTest for performance auditing.
-- Implement performance budgets and monitoring.
+- **Core Web Vitals**: LCP < 2.5s, FID < 100ms, CLS < 0.1
+- **Bundle Size**: Monitor and optimize JavaScript bundle size
+- **Image Optimization**: Use WebP format and proper sizing
+- **Caching**: Implement proper caching strategies for static assets
 
-Refer to Astro's official documentation for detailed information on components, routing, and integrations for best practices.
+## Anti-patterns to Avoid
 
-## Astro Props Interface
+### ❌ Don't: Over-hydrate Components
 
-- Enforce defining props using TypeScript interfaces in `.astro` files, specifically looking for `interface Props` in each component.
+```astro
+<!-- ❌ Bad: Unnecessary hydration -->
+<StaticContent client:load />
 
-## Astro Component Naming
+<!-- ✅ Good: No hydration needed -->
+<StaticContent />
+```
 
-Astro component filenames must use PascalCase.
-Filenames must match the pattern: `^[A-Z][a-zA-Z0-9]*\.astro$`.
+### ❌ Don't: Mix Global and Scoped Styles
+
+```astro
+<!-- ❌ Bad: Mixing styles -->
+<style>
+  .global-class { /* Global scope */ }
+</style>
+
+<style>
+  .scoped-class { /* Scoped to component */ }
+</style>
+
+<!-- ✅ Good: Consistent approach -->
+<style>
+  .component { /* All scoped */ }
+</style>
+```
+
+### ❌ Don't: Ignore TypeScript
+
+```astro
+<!-- ❌ Bad: No type safety -->
+---
+const { title } = Astro.props;
+---
+
+<!-- ✅ Good: Type-safe props -->
+---
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+```
+
+## Remember
+
+1. **Static-first**: Prioritize static generation for performance
+2. **Type-safe**: Always use TypeScript interfaces for props
+3. **Component-driven**: Build with reusable Astro components
+4. **Performance-focused**: Monitor Core Web Vitals and bundle size
+5. **Accessible**: Use semantic HTML and proper ARIA attributes
+6. **Modern features**: Leverage View Transitions and Content Collections
+7. **Testing**: Include unit and E2E tests for critical functionality
+
+Refer to [Astro's official documentation](https://docs.astro.build/) for the latest features and best practices.

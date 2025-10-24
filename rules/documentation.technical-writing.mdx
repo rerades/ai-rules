@@ -1,0 +1,582 @@
+---
+id: documentation.technical-writing.guidelines
+version: 1.0.0
+title: "Technical Writing Guidelines"
+summary: "Standards for writing clear, in-depth technical tutorials and documentation for developers."
+category: documentation
+scope: ["global", "repo", "package", "workspace"]
+language: "markdown"
+frameworks: ["markdown"]
+tooling: ["markdown", "docs"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["technical-writer", "frontend", "backend", "fullstack"]
+severity: "low"
+requires: ["documentation.markdown-standards"]
+conflicts: []
+supersedes: []
+bundles: ["documentation/writing", "documentation/tutorials"]
+files: ["**/*.{md,mdx}", "docs/**/*.md", "**/tutorials/**/*.md"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 51
+inputs:
+  enforceDepthOverBreadth:
+    {
+      type: "boolean",
+      default: true,
+      description: "Enforce in-depth explanations over surface-level coverage",
+    }
+  avoidBulletPoints:
+    {
+      type: "boolean",
+      default: true,
+      description: "Prefer detailed paragraphs over bullet-point lists",
+    }
+tags:
+  [
+    "topic:documentation",
+    "topic:technical-writing",
+    "topic:tutorials",
+    "topic:content",
+  ]
+owner: "documentation@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 180 }
+license: "MIT"
+links:
+  - {
+      rel: "related",
+      href: "rules/documentation.markdown-standards.mdx",
+      description: "For Markdown formatting standards",
+    }
+---
+
+# Technical Writing Guidelines
+
+You are an expert software developer creating technical content for other developers. Your task is to produce clear, in-depth tutorials that provide practical, implementable knowledge.
+
+## Core Principle
+
+**Depth over breadth**. Create content that developers can use to implement real solutions, not just understand concepts superficially. Strive for clarity, depth, and practical applicability in every paragraph and code example.
+
+## 1. Writing Style and Content
+
+### Start with Technical Content
+
+```markdown
+✅ Good: Direct technical start
+This tutorial implements user authentication using JWT tokens and refresh
+token rotation. The implementation uses Express middleware for token
+validation and Redis for token storage. Each authentication request
+validates the JWT signature, checks token expiration, and verifies the
+user's session state in Redis.
+
+❌ Bad: Generic introduction
+In today's modern web development landscape, authentication is a crucial
+aspect of building robust applications. Many developers struggle with
+implementing secure authentication systems. This tutorial will guide you
+through the key concepts and best practices.
+```
+
+**Rules**:
+
+- Start with technical content immediately
+- Avoid broad introductions or generalizations about the tech landscape
+- No phrases like "In today's [x] world" or "landscape"
+- Get to the implementation details in the first paragraph
+
+### Use Direct, Peer-to-Peer Tone
+
+```markdown
+✅ Good: Direct tone
+The JWT validation middleware intercepts requests before they reach
+protected routes. It extracts the token from the Authorization header,
+verifies the signature using the public key, and checks expiration.
+If validation fails, the middleware returns a 401 response before the
+route handler executes.
+
+❌ Bad: Indirect or vague
+It's important to understand that authentication is crucial for security.
+You should ideally implement robust validation to enhance your system's
+security posture. Key considerations include proper token handling.
+```
+
+**Rules**:
+
+- Write as if explaining to a peer developer
+- Use active voice and specific verbs
+- Avoid words like "crucial", "ideal", "key", "robust", "enhance" without substantive explanation
+- Focus on the "how" and "why" of implementations
+
+### Vary Sentence Structure
+
+```markdown
+✅ Good: Varied structure
+The authentication service generates JWT tokens using RS256 asymmetric
+encryption. This approach separates the signing key (private) from the
+verification key (public). Microservices can verify tokens without
+accessing the private key, reducing security risk. The public key
+distribution happens through a JWKS endpoint that services poll every
+hour.
+
+❌ Bad: Repetitive structure
+By using RS256, you can sign tokens. By separating keys, you can improve
+security. By distributing public keys, you can enable verification. By
+polling the endpoint, you can update keys.
+```
+
+**Rules**:
+
+- Avoid starting sentences with "By" or similar constructions
+- Vary sentence beginnings and structures
+- Each sentence should use unique descriptors
+- Don't repeat adjectives or adverbs unnecessarily
+
+## 2. Content Structure
+
+### Section Organization
+
+Each main section should:
+
+1. **Open with overview** (1-2 sentences) stating what the section covers
+2. **Dive into details** explaining implementation specifics
+3. **Include code examples** that demonstrate the concept
+4. **Explain technical decisions** and their implications
+
+````markdown
+✅ Good: Well-organized section
+
+## Token Storage and Rotation
+
+This section implements refresh token rotation using Redis for storage.
+Each refresh token generates a new access token and invalidates the
+previous refresh token, preventing token replay attacks.
+
+The rotation mechanism stores each refresh token in Redis with a 30-day
+TTL. When a client presents a refresh token, the service verifies its
+presence in Redis, generates new tokens, deletes the old refresh token,
+and stores the new one. This approach ensures that stolen refresh tokens
+become useless after their first use.
+
+```typescript
+async function rotateRefreshToken(oldToken: string): Promise<TokenPair> {
+  // Verify token exists in Redis
+  const userId = await redis.get(`refresh:${oldToken}`);
+  if (!userId) {
+    throw new InvalidTokenError("Refresh token not found or expired");
+  }
+
+  // Generate new token pair
+  const accessToken = generateAccessToken(userId);
+  const refreshToken = generateRefreshToken();
+
+  // Store new refresh token and delete old one
+  await Promise.all([
+    redis.setex(`refresh:${refreshToken}`, THIRTY_DAYS, userId),
+    redis.del(`refresh:${oldToken}`),
+  ]);
+
+  return { accessToken, refreshToken };
+}
+```
+````
+
+The Promise.all call ensures atomic deletion and creation, preventing a
+race condition where both tokens could be valid simultaneously. The
+30-day TTL means refresh tokens automatically expire even if not
+explicitly revoked.
+
+❌ Bad: Poorly organized
+
+## Tokens
+
+Tokens are important. You should rotate them. Here's some code:
+
+```typescript
+function rotate(token) {
+  // rotation logic
+}
+```
+
+This is good for security.
+
+````
+
+### Meaningful Subtitles
+
+```markdown
+✅ Good: Descriptive subtitles
+### Implementing Rate Limiting with Sliding Window Algorithm
+### Database Schema Design for Multi-Tenancy
+### WebSocket Connection Pooling for Horizontal Scaling
+
+❌ Bad: Generic subtitles
+### Implementation
+### Best Practices
+### Considerations
+````
+
+**Rules**:
+
+- Subtitles should tell readers exactly what they'll learn
+- Be specific about the technology or pattern
+- Avoid generic titles that could apply to anything
+
+## 3. Code Examples
+
+### Provide Complete, Real-World Examples
+
+````typescript
+✅ Good: Complete, realistic example
+// src/middleware/authentication.ts
+import { Request, Response, NextFunction } from "express";
+import { verify } from "jsonwebtoken";
+import { UserRole } from "../types/user";
+
+interface JWTPayload {
+  userId: string;
+  email: string;
+  roles: UserRole[];
+  iat: number;
+  exp: number;
+}
+
+export function requireAuth(allowedRoles?: UserRole[]) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Extract token from Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) {
+        return res.status(401).json({
+          error: "Missing or invalid Authorization header",
+        });
+      }
+
+      const token = authHeader.substring(7);
+
+      // Verify JWT signature and expiration
+      const payload = verify(token, process.env.JWT_PUBLIC_KEY!, {
+        algorithms: ["RS256"],
+      }) as JWTPayload;
+
+      // Check role-based access if roles specified
+      if (allowedRoles && !allowedRoles.some((role) => payload.roles.includes(role))) {
+        return res.status(403).json({
+          error: "Insufficient permissions",
+        });
+      }
+
+      // Attach user info to request
+      req.user = {
+        id: payload.userId,
+        email: payload.email,
+        roles: payload.roles,
+      };
+
+      next();
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        return res.status(401).json({ error: "Token expired" });
+      }
+      if (error.name === "JsonWebTokenError") {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+      return res.status(500).json({ error: "Authentication failed" });
+    }
+  };
+}
+
+// Usage in routes
+app.get(
+  "/api/admin/users",
+  requireAuth([UserRole.Admin]),
+  async (req, res) => {
+    // Only admins can access this route
+    const users = await User.findAll();
+    res.json(users);
+  }
+);
+
+❌ Bad: Incomplete, toy example
+```typescript
+function auth(req, res, next) {
+  if (req.headers.token) {
+    next();
+  } else {
+    res.status(401).send("Unauthorized");
+  }
+}
+````
+
+````
+
+**Rules**:
+- Provide substantial, real-world code examples
+- Show complete functionality, not just snippets
+- Include error handling and edge cases
+- Demonstrate patterns readers can adapt to their projects
+
+### Explain Code In-Depth
+
+```markdown
+✅ Good: Detailed explanation
+The middleware checks for the Bearer token format because JWT tokens
+should be sent in the Authorization header with the "Bearer " prefix,
+following RFC 6750. Using substring(7) removes "Bearer " (7 characters)
+from the header value. This approach is more explicit than split()[1],
+which would fail silently if the format is incorrect.
+
+The verify function from jsonwebtoken throws specific error types that
+we catch separately. TokenExpiredError indicates the token's exp claim
+is in the past, requiring the client to refresh the token.
+JsonWebTokenError covers invalid signatures, malformed tokens, or
+algorithm mismatches. Handling these separately provides better error
+messages to clients.
+
+The role-based access check uses Array.some() to verify the user has
+at least one required role. This allows flexible role hierarchies where
+a user might have multiple roles like ["Admin", "Editor"]. The check
+happens after JWT verification to avoid unnecessary work for invalid
+tokens.
+
+❌ Bad: Surface-level explanation
+This code checks the token and verifies it. If the token is valid, it
+lets the request through. Otherwise, it returns an error. The roles
+are also checked for authorization.
+````
+
+**Rules**:
+
+- Explain WHY certain approaches are taken, not just WHAT the code does
+- Discuss technical decisions and their implications
+- Point out alternatives and why you chose this approach
+- Explain error handling strategies
+
+### Indicate File Placement
+
+```markdown
+✅ Good: Clear file structure
+Place the authentication middleware in `src/middleware/authentication.ts`.
+The route handlers that use this middleware go in `src/routes/api/users.ts`.
+Configuration for JWT keys belongs in environment variables loaded via
+`src/config/env.ts`.
+```
+
+src/
+├── middleware/
+│ └── authentication.ts # JWT verification middleware
+├── routes/
+│ └── api/
+│ └── users.ts # Protected user routes
+├── config/
+│ └── env.ts # Environment configuration
+└── types/
+└── user.ts # User and role type definitions
+
+```
+
+❌ Bad: No structure guidance
+Add this middleware to your project and use it in your routes.
+```
+
+## 4. Anti-Patterns to Avoid
+
+### Don't Use Generic Sections
+
+```markdown
+❌ Bad: Generic pros/cons
+
+## Pros and Cons
+
+Pros:
+
+- Easy to use
+- Good performance
+- Scalable
+
+Cons:
+
+- Requires setup
+- Learning curve
+- Complexity
+
+✅ Good: Specific trade-offs
+
+## Implementation Trade-offs
+
+This approach uses Redis for session storage, which adds operational
+complexity compared to in-memory storage. You need to manage Redis
+availability, handle connection failures, and monitor memory usage.
+However, Redis enables horizontal scaling because sessions persist
+outside the application process. Multiple application instances can
+share session data without sticky sessions or session replication.
+
+The token rotation mechanism increases database operations. Each token
+refresh requires two Redis operations (delete old, store new) instead
+of just verifying the token. This doubles the load on Redis for
+authentication operations. The trade-off is improved security through
+automatic token invalidation after use.
+```
+
+**Rules**:
+
+- Avoid generic "Pros and Cons" sections
+- Don't list "Real-world use cases" without depth
+- Skip "Best Practices" unless explaining WHY they're best
+- No sections that could apply to any technology
+
+### Don't Over-Use Bullet Points
+
+```markdown
+❌ Bad: Bullet-point heavy
+
+## Implementation Steps
+
+- Install dependencies
+- Configure environment
+- Set up database
+- Create middleware
+- Add routes
+- Test functionality
+- Deploy to production
+
+✅ Good: Detailed paragraphs
+
+## Implementation Process
+
+Start by installing the required dependencies for JWT handling and Redis
+connectivity. The jsonwebtoken library provides JWT creation and
+verification, while ioredis offers a robust Redis client with
+connection pooling and automatic reconnection. Install these alongside
+their TypeScript types for development.
+
+Configure the JWT keys through environment variables rather than
+hardcoding them. Generate an RSA key pair using openssl or a similar
+tool, storing the private key securely and distributing the public key
+to services that verify tokens. The private key remains on the
+authentication service only, while other services receive just the
+public key through a secure configuration management system.
+
+The database setup involves creating Redis keys with appropriate TTLs
+for both access and refresh tokens. Access tokens typically expire in
+15 minutes, stored only in the client. Refresh tokens persist in Redis
+for 30 days, allowing long-lived sessions while maintaining security
+through rotation.
+```
+
+**Rules**:
+
+- Prefer detailed paragraphs that explore topics thoroughly
+- Use bullet points sparingly, only for simple lists
+- Each paragraph should add substantial information
+- Build a narrative that guides readers through implementation
+
+## 5. Conclusions
+
+### Write Practical Summaries
+
+```markdown
+✅ Good: Practical conclusion
+This authentication implementation provides a foundation for secure user
+sessions in distributed systems. The refresh token rotation prevents
+token replay attacks while maintaining user convenience through long-lived
+sessions. Redis storage enables horizontal scaling without session
+affinity.
+
+The main challenge in production deployments involves Redis availability.
+Implementing Redis Sentinel or Cluster adds operational complexity but
+ensures authentication continues during node failures. Consider implementing
+a circuit breaker pattern for Redis connections to degrade gracefully when
+Redis is unavailable.
+
+❌ Bad: Generic conclusion
+In conclusion, we have covered authentication and its implementation.
+This approach is robust and scalable. To sum up, following these best
+practices will enhance your application's security. Good luck with your
+implementation!
+```
+
+**Rules**:
+
+- Summarize what has been covered concretely
+- Don't use phrases like "In conclusion" or "To sum up"
+- Mention specific challenges or areas for improvement
+- Keep conclusions concise (max 4 sentences and 2 paragraphs)
+- Focus on practical implications of the implementation
+
+## 6. Overall Approach
+
+### Assume Competent Readers
+
+```markdown
+✅ Good: Assumes technical knowledge
+The middleware uses closure to capture the allowedRoles parameter,
+returning a new function that Express can call with req, res, and next.
+This pattern enables parameterized middleware without creating separate
+functions for each role combination.
+
+❌ Bad: Over-explains basics
+A middleware is a function that runs before your route handler. It
+receives three parameters: req (the request), res (the response), and
+next (a callback function). You call next() to proceed to the next
+middleware or route handler.
+```
+
+**Rules**:
+
+- Assume readers are competent developers who need in-depth information
+- Don't explain basic programming concepts unless critical to understanding
+- Use technical terms accurately
+- Focus on advanced concepts and implementation details
+
+### Build Working Implementations
+
+```markdown
+✅ Good: Complete implementation guide
+The complete authentication system requires these components:
+
+1. Key generation and distribution (covered in Security Setup)
+2. Token generation service (covered in JWT Service)
+3. Verification middleware (covered in Middleware Implementation)
+4. Token rotation endpoint (covered in Refresh Endpoint)
+5. Redis storage layer (covered in Session Storage)
+
+Each section builds on the previous one, resulting in a production-ready
+authentication system. The final implementation includes error handling,
+rate limiting, and monitoring hooks for tracking authentication failures.
+
+❌ Bad: Disconnected examples
+Here are some examples of authentication code. You can use these in
+various ways depending on your needs. Adapt them to your specific use
+case.
+```
+
+**Rules**:
+
+- Guide readers through building a complete working system
+- Show how components fit together
+- Explain architectural decisions
+- Provide insights beyond basic tutorials or documentation
+
+## Summary
+
+1. **Start with technical content** - No generic introductions
+2. **Use peer-to-peer tone** - Direct, matter-of-fact writing
+3. **Vary sentence structure** - Avoid repetitive patterns
+4. **Provide complete examples** - Real-world, adaptable code
+5. **Explain in-depth** - Cover the "why" behind decisions
+6. **Avoid generic sections** - No pros/cons lists without substance
+7. **Use paragraphs over bullets** - Explore topics thoroughly
+8. **Write practical conclusions** - Focus on implementation implications
+
+## Remember
+
+Great technical writing is:
+
+- **Deep**: Covers advanced concepts and implementation details
+- **Practical**: Provides working code readers can adapt
+- **Clear**: Uses technical terms accurately without over-explaining
+- **Complete**: Builds a full implementation, not just concepts
+- **Insightful**: Goes beyond basic tutorials and documentation
+
+Technical content should enable developers to implement real solutions, not just understand concepts superficially.

@@ -1,0 +1,847 @@
+---
+id: performance.lighthouse-metrics.guidelines
+version: 1.0.0
+title: "Lighthouse Performance Metrics"
+summary: "Lighthouse audit execution, interpretation, and optimization guidelines for web performance analysis."
+category: performance
+scope: ["global", "repo", "package", "workspace"]
+language: "javascript"
+frameworks: ["lighthouse", "web-vitals", "performance"]
+tooling: ["lighthouse", "lighthouse-ci", "chrome-devtools", "webpack", "vite"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "fullstack", "performance-engineer", "devops"]
+severity: "medium"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["performance/lighthouse", "performance/web-vitals"]
+files:
+  [
+    "**/*.{js,ts,jsx,tsx}",
+    "**/*.{html,css}",
+    "**/lighthouse.config.js",
+    "**/.lighthouserc.js",
+    "**/performance-budget.js",
+  ]
+enforcement: { lint: "warn", ci: "required", scaffold: "none" }
+order: 70
+inputs:
+  enforceCoreWebVitals:
+    {
+      type: "boolean",
+      default: true,
+      description: "Enforce Core Web Vitals thresholds in CI/CD",
+    }
+  requireArtifactStorage:
+    {
+      type: "boolean",
+      default: true,
+      description: "Require saving raw Lighthouse reports in data/lh/ directory",
+    }
+  minimumRuns:
+    {
+      type: "number",
+      default: 3,
+      description: "Minimum number of Lighthouse runs for statistical validity",
+    }
+tags:
+  [
+    "topic:performance",
+    "topic:lighthouse",
+    "topic:web-vitals",
+    "topic:optimization",
+    "topic:auditing",
+  ]
+owner: "performance@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://developers.google.com/web/tools/lighthouse" }
+  - { rel: "docs", href: "https://web.dev/vitals/" }
+  - { rel: "docs", href: "https://github.com/GoogleChrome/lighthouse-ci" }
+---
+
+# Lighthouse Performance Metrics
+
+You are an expert in web performance optimization, Lighthouse auditing, and Core Web Vitals analysis.
+
+## Core Principle
+
+**Reproducibility and statistical validity**. Document Chrome version, throttling configuration, and environment details. Run minimum 3 audits per scenario and report median values with dispersion. Save raw Lighthouse reports for artifact tracking and trend analysis.
+
+## 1. Lighthouse Execution
+
+### Command Examples
+
+```bash
+# Local development with comprehensive output
+npx lighthouse http://localhost:3000 --output=json,html --output-path=./lighthouse-report
+
+# CI/CD with specific configuration
+npx lighthouse https://example.com --config-path=./lighthouse.config.js --output=json
+
+# Mobile-specific audit with throttling
+npx lighthouse https://example.com --emulated-form-factor=mobile --throttling-method=devtools
+
+# Performance-only audit
+npx lighthouse https://example.com --only-categories=performance --output=json
+```
+
+### Configuration Templates
+
+```javascript
+// lighthouse.config.js
+module.exports = {
+  extends: "lighthouse:default",
+  settings: {
+    throttling: {
+      rttMs: 40,
+      throughputKbps: 10240,
+      cpuSlowdownMultiplier: 1,
+    },
+    throttlingMethod: "devtools",
+    emulatedFormFactor: "mobile",
+    onlyAudits: [
+      "first-contentful-paint",
+      "largest-contentful-paint",
+      "cumulative-layout-shift",
+      "total-blocking-time",
+      "speed-index",
+      "interactive",
+      "time-to-first-byte",
+    ],
+  },
+};
+
+// Performance budget configuration
+module.exports = {
+  budgets: [
+    {
+      resourceType: "script",
+      budget: 170, // KB
+    },
+    {
+      resourceType: "total",
+      budget: 500, // KB
+    },
+    {
+      metric: "first-contentful-paint",
+      budget: 1800, // ms
+    },
+    {
+      metric: "largest-contentful-paint",
+      budget: 2500, // ms
+    },
+  ],
+};
+```
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/lighthouse.yml
+name: Lighthouse CI
+on: [push, pull_request]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+      - run: npm ci
+      - run: npm run build
+      - run: npm run serve &
+      - run: npx lighthouse-ci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_SERVER_BASE_URL: ${{ secrets.LHCI_SERVER_BASE_URL }}
+          LHCI_TOKEN: ${{ secrets.LHCI_TOKEN }}
+```
+
+## 2. Core Web Vitals Analysis
+
+### Critical Metrics & Targets
+
+| Metric                              | Target  | Poor     | Good    | Critical |
+| ----------------------------------- | ------- | -------- | ------- | -------- |
+| **LCP** (Largest Contentful Paint)  | < 2.5s  | > 4.0s   | < 2.5s  | > 4.0s   |
+| **CLS** (Cumulative Layout Shift)   | < 0.1   | > 0.25   | < 0.1   | > 0.25   |
+| **INP** (Interaction to Next Paint) | < 200ms | > 500ms  | < 200ms | > 500ms  |
+| **TTFB** (Time to First Byte)       | < 800ms | > 1800ms | < 800ms | > 1800ms |
+
+### LCP Optimization Patterns
+
+```html
+<!-- ❌ Poor: Unoptimized image without dimensions -->
+<img src="/hero-image.jpg" alt="Hero" />
+
+<!-- ✅ Good: Optimized with dimensions and modern formats -->
+<img
+  src="/hero-image.webp"
+  alt="Hero"
+  width="800"
+  height="600"
+  loading="eager"
+  fetchpriority="high"
+/>
+
+<!-- ✅ Better: Responsive images with multiple formats -->
+<picture>
+  <source srcset="/hero.avif" type="image/avif" />
+  <source srcset="/hero.webp" type="image/webp" />
+  <img
+    src="/hero.jpg"
+    alt="Hero image"
+    width="800"
+    height="600"
+    loading="eager"
+    fetchpriority="high"
+  />
+</picture>
+```
+
+### CLS Prevention Strategies
+
+```html
+<!-- ❌ Poor: Missing dimensions causing layout shift -->
+<img src="/banner.jpg" alt="Banner" />
+
+<!-- ✅ Good: Reserved space with aspect ratio -->
+<img
+  src="/banner.jpg"
+  alt="Banner"
+  width="1200"
+  height="400"
+  style="aspect-ratio: 1200/400"
+/>
+
+<!-- ✅ Better: CSS-based dimension control -->
+<div class="banner-container">
+  <img
+    src="/banner.jpg"
+    alt="Banner"
+    width="1200"
+    height="400"
+    class="banner-image"
+  />
+</div>
+```
+
+```css
+/* Reserve space for dynamic content */
+.ad-container {
+  min-height: 250px;
+  background-color: #f0f0f0;
+}
+
+/* Prevent layout shifts from fonts */
+@font-face {
+  font-family: "Custom Font";
+  font-display: swap; /* Prevents FOIT */
+  src: url("/fonts/custom.woff2") format("woff2");
+}
+
+/* Banner image container */
+.banner-container {
+  aspect-ratio: 1200/400;
+  overflow: hidden;
+}
+
+.banner-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+```
+
+### INP Optimization
+
+```javascript
+// ❌ Poor: Heavy synchronous operations blocking main thread
+function processData() {
+  const result = heavyComputation(); // Blocks main thread
+  updateUI(result);
+}
+
+// ✅ Good: Defer non-critical work using requestIdleCallback
+function processData() {
+  const result = heavyComputation();
+  updateUI(result);
+
+  // Defer non-critical work to idle time
+  requestIdleCallback(() => {
+    processAnalytics();
+    updateRecommendations();
+  });
+}
+
+// ✅ Better: Use Web Workers for heavy computations
+function processData() {
+  const worker = new Worker("/js/data-processor.js");
+
+  worker.postMessage({ data: rawData });
+  worker.onmessage = (event) => {
+    updateUI(event.data.result);
+  };
+}
+```
+
+## 3. Extended Performance Metrics
+
+### Additional Metrics to Monitor
+
+| Metric                           | Target  | Impact                | Priority |
+| -------------------------------- | ------- | --------------------- | -------- |
+| **TTI** (Time to Interactive)    | < 3.8s  | User can interact     | High     |
+| **Speed Index**                  | < 3.4s  | Visual completeness   | High     |
+| **TBT** (Total Blocking Time)    | < 200ms | Main thread blocking  | High     |
+| **FCP** (First Contentful Paint) | < 1.8s  | First content visible | Medium   |
+
+### Bundle Analysis and Optimization
+
+```javascript
+// webpack.config.js - Bundle optimization
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendors",
+          chunks: "all",
+          priority: 10,
+        },
+        common: {
+          name: "common",
+          minChunks: 2,
+          chunks: "all",
+          enforce: true,
+          priority: 5,
+        },
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+          name: "react",
+          chunks: "all",
+          priority: 20,
+        },
+      },
+    },
+    usedExports: true,
+    sideEffects: false,
+  },
+};
+```
+
+```javascript
+// vite.config.js - Modern bundler optimization
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          utils: ["lodash", "date-fns"],
+          charts: ["chart.js", "d3"],
+        },
+      },
+    },
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom"],
+  },
+});
+```
+
+## 4. Category-Specific Analysis
+
+### Performance Score Optimization
+
+**Critical Issues to Address:**
+
+1. **Unused JavaScript**
+
+```javascript
+// Use dynamic imports for code splitting
+const HeavyComponent = lazy(() => import("./HeavyComponent"));
+
+// Route-based code splitting
+const Home = () => import("./pages/Home");
+const About = () => import("./pages/About");
+
+// Feature-based splitting
+const Analytics = () => import("./features/analytics");
+
+// React lazy loading with Suspense
+import { lazy, Suspense } from "react";
+const LazyComponent = lazy(() => import("./LazyComponent"));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LazyComponent />
+    </Suspense>
+  );
+}
+```
+
+2. **Render-blocking Resources**
+
+```html
+<!-- ❌ Blocking CSS -->
+<link rel="stylesheet" href="styles.css" />
+
+<!-- ✅ Non-blocking CSS with preload -->
+<link
+  rel="preload"
+  href="styles.css"
+  as="style"
+  onload="this.onload=null;this.rel='stylesheet'"
+/>
+
+<!-- ✅ Critical CSS inlined -->
+<style>
+  /* Critical above-the-fold styles */
+  .hero {
+    display: block;
+  }
+  .navigation {
+    position: fixed;
+  }
+</style>
+
+<!-- ✅ Non-critical CSS loaded asynchronously -->
+<link
+  rel="preload"
+  href="non-critical.css"
+  as="style"
+  onload="this.onload=null;this.rel='stylesheet'"
+/>
+```
+
+3. **Image Optimization**
+
+```html
+<!-- Modern image optimization with responsive images -->
+<picture>
+  <source
+    media="(max-width: 768px)"
+    srcset="/hero-mobile.avif"
+    type="image/avif"
+  />
+  <source
+    media="(max-width: 768px)"
+    srcset="/hero-mobile.webp"
+    type="image/webp"
+  />
+  <source media="(max-width: 768px)" srcset="/hero-mobile.jpg" />
+  <source srcset="/hero.avif" type="image/avif" />
+  <source srcset="/hero.webp" type="image/webp" />
+  <img
+    src="/hero.jpg"
+    alt="Hero image"
+    width="800"
+    height="600"
+    loading="lazy"
+    sizes="(max-width: 768px) 100vw, 800px"
+  />
+</picture>
+```
+
+### Accessibility Analysis
+
+**Common Issues & Fixes:**
+
+```html
+<!-- ❌ Poor: Missing alt text -->
+<img src="/photo.jpg" />
+
+<!-- ✅ Good: Descriptive alt text -->
+<img src="/photo.jpg" alt="Team meeting in conference room" />
+
+<!-- ❌ Poor: No ARIA labels -->
+<button>×</button>
+
+<!-- ✅ Good: Accessible button -->
+<button aria-label="Close dialog">×</button>
+
+<!-- ✅ Better: Complete accessibility -->
+<button
+  aria-label="Close dialog"
+  aria-expanded="false"
+  aria-controls="dialog-content"
+>
+  ×
+</button>
+```
+
+```css
+/* Color contrast fixes */
+.button {
+  background-color: #0066cc; /* 4.5:1 contrast ratio */
+  color: white;
+  border: 2px solid transparent;
+}
+
+.button:hover {
+  background-color: #0052a3;
+}
+
+.button:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Focus indicators for keyboard navigation */
+.button:focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+```
+
+### Best Practices Analysis
+
+**Security & Performance:**
+
+```html
+<!-- Resource hints for performance -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="dns-prefetch" href="https://api.example.com" />
+<link rel="preload" href="/critical.css" as="style" />
+<link rel="preload" href="/hero-image.webp" as="image" />
+
+<!-- Security headers -->
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self' 'unsafe-inline'"
+/>
+<meta http-equiv="X-Content-Type-Options" content="nosniff" />
+<meta http-equiv="X-Frame-Options" content="DENY" />
+```
+
+```javascript
+// Service worker for caching
+self.addEventListener("fetch", (event) => {
+  if (event.request.destination === "image") {
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request);
+      })
+    );
+  }
+});
+
+// Cache-first strategy for static assets
+self.addEventListener("fetch", (event) => {
+  if (event.request.url.includes("/static/")) {
+    event.respondWith(
+      caches.open("static-cache").then((cache) => {
+        return cache.match(event.request).then((response) => {
+          return (
+            response ||
+            fetch(event.request).then((fetchResponse) => {
+              cache.put(event.request, fetchResponse.clone());
+              return fetchResponse;
+            })
+          );
+        });
+      })
+    );
+  }
+});
+```
+
+### SEO Analysis
+
+```html
+<!-- Comprehensive meta tags -->
+<head>
+  <title>Page Title - Site Name</title>
+  <meta
+    name="description"
+    content="Compelling description under 160 characters"
+  />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Page Title" />
+  <meta property="og:description" content="Description" />
+  <meta property="og:image" content="/og-image.jpg" />
+  <meta property="og:url" content="https://example.com/page" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Page Title" />
+  <meta name="twitter:description" content="Description" />
+  <meta name="twitter:image" content="/twitter-image.jpg" />
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Page Title",
+      "description": "Page description",
+      "url": "https://example.com/page",
+      "mainEntity": {
+        "@type": "Organization",
+        "name": "Company Name"
+      }
+    }
+  </script>
+</head>
+```
+
+## 5. Optimization Patterns
+
+### Font Loading Optimization
+
+```css
+/* Font loading strategy */
+@font-face {
+  font-family: "Custom Font";
+  src: url("/fonts/custom.woff2") format("woff2");
+  font-display: swap; /* Prevents invisible text */
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Preload critical fonts */
+```
+
+```html
+<link
+  rel="preload"
+  href="/fonts/custom.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+
+<!-- Fallback font stack -->
+<style>
+  body {
+    font-family: "Custom Font", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      sans-serif;
+  }
+</style>
+```
+
+### Code Splitting Strategies
+
+```javascript
+// Dynamic imports for code splitting
+// Route-based splitting
+const Home = () => import("./pages/Home");
+const About = () => import("./pages/About");
+
+// Component-based splitting
+const HeavyChart = () => import("./components/HeavyChart");
+
+// Feature-based splitting
+const Analytics = () => import("./features/analytics");
+
+// React lazy loading with error boundaries
+import { lazy, Suspense } from "react";
+import ErrorBoundary from "./ErrorBoundary";
+
+const LazyComponent = lazy(() => import("./LazyComponent"));
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyComponent />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+### Caching Strategies
+
+```javascript
+// Service worker caching
+const CACHE_NAME = "app-v1";
+const urlsToCache = ["/", "/styles/main.css", "/scripts/main.js"];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // Return cached version or fetch from network
+      return response || fetch(event.request);
+    })
+  );
+});
+```
+
+## 6. Reporting & Data Storage
+
+### JSON Schema for Results
+
+```json
+{
+  "commit": "abc123def",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "environment": {
+    "os": "macOS 14.6",
+    "chrome": "120.0.6099.109",
+    "node": "18.17.0"
+  },
+  "scenario": "home-cold",
+  "config": {
+    "throttling": "devtools",
+    "formFactor": "mobile"
+  },
+  "metrics": {
+    "lcp": 2100,
+    "cls": 0.02,
+    "inp": 120,
+    "ttfb": 90,
+    "tti": 3200,
+    "speedIndex": 2800,
+    "tbt": 150
+  },
+  "scores": {
+    "performance": 85,
+    "accessibility": 92,
+    "bestPractices": 88,
+    "seo": 95
+  },
+  "opportunities": [
+    {
+      "id": "unused-javascript",
+      "title": "Remove unused JavaScript",
+      "score": 0.15,
+      "details": "2.1 MB of unused JavaScript"
+    }
+  ]
+}
+```
+
+### Markdown Report Template
+
+```markdown
+## Lighthouse Performance Report
+
+| Metric | Current | Target  | Status  |
+| ------ | ------- | ------- | ------- |
+| LCP    | 2.1s    | < 2.5s  | ✅ Good |
+| CLS    | 0.02    | < 0.1   | ✅ Good |
+| INP    | 120ms   | < 200ms | ✅ Good |
+| TTFB   | 90ms    | < 800ms | ✅ Good |
+
+### Critical Issues
+
+- [ ] Remove unused JavaScript (2.1 MB)
+- [ ] Optimize images (WebP format)
+- [ ] Implement resource hints
+
+### Optimization Impact
+
+- Image optimization: ~500ms LCP improvement
+- Code splitting: ~300ms TTI improvement
+```
+
+## 7. AI Analysis Guidelines
+
+### When Analyzing Lighthouse Results
+
+1. **Parse JSON reports** and identify critical issues first
+2. **Prioritize Core Web Vitals** improvements over minor optimizations
+3. **Calculate potential gains** with specific metric improvements
+4. **Provide actionable code examples** for each recommendation
+5. **Suggest validation methodology** for implemented fixes
+
+### When Implementing Optimizations
+
+1. **Start with highest-impact, lowest-effort** optimizations
+2. **Include before/after metric predictions** in comments
+3. **Add proper TypeScript types** for configurations
+4. **Explain performance rationale** in code comments
+5. **Suggest monitoring steps** for validation
+
+### Performance Budget Example
+
+```javascript
+// performance-budget.js
+module.exports = {
+  budgets: [
+    {
+      resourceType: "script",
+      budget: 170, // KB
+    },
+    {
+      resourceType: "total",
+      budget: 500, // KB
+    },
+    {
+      metric: "first-contentful-paint",
+      budget: 1800, // ms
+    },
+    {
+      metric: "largest-contentful-paint",
+      budget: 2500, // ms
+    },
+  ],
+};
+```
+
+## 8. Integration with Metrics
+
+- Follow same data storage conventions: `data/lh/{project}/{YYYY-MM-DD}/`
+- Use consistent scenario naming: `home-cold`, `home-warm`, `product-page`
+- Cross-reference with Web Vitals data from parent metrics rule
+- Maintain artifact versioning and commit hash tracking
+
+## 9. Key Performance Indicators
+
+### Critical Thresholds
+
+- **LCP**: < 2.5s (Good), > 4.0s (Poor)
+- **CLS**: < 0.1 (Good), > 0.25 (Poor)
+- **INP**: < 200ms (Good), > 500ms (Poor)
+- **Performance Score**: > 90 (Good), < 50 (Poor)
+
+### Optimization Priority
+
+1. **Critical**: Core Web Vitals failures
+2. **High**: Performance score < 70
+3. **Medium**: Accessibility/Best Practices issues
+4. **Low**: SEO optimizations
+
+Always prioritize user experience metrics (Core Web Vitals) over technical scores when making optimization decisions.
+
+## Summary
+
+1. **Execute audits consistently** with proper configuration and environment documentation
+2. **Focus on Core Web Vitals** as primary performance indicators
+3. **Implement optimization patterns** for images, fonts, and code splitting
+4. **Use statistical validity** with minimum 3 runs per scenario
+5. **Store artifacts systematically** in `data/lh/{project}/{YYYY-MM-DD}/`
+6. **Prioritize high-impact optimizations** over minor improvements
+7. **Monitor trends over time** to validate optimization effectiveness
+8. **Integrate with CI/CD** for automated performance regression detection
+
+## Remember
+
+Effective Lighthouse analysis:
+
+- **Reproducible**: Consistent environment and configuration
+- **Statistical**: Multiple runs with median reporting
+- **Actionable**: Specific optimization recommendations with code examples
+- **Trackable**: Artifact storage and trend monitoring
+- **User-focused**: Prioritizes Core Web Vitals over technical scores
