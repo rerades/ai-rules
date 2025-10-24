@@ -1,0 +1,400 @@
+---
+id: testing.e2e-playwright.guidelines
+version: 1.0.0
+title: "End-to-End Testing with Playwright"
+summary: "Comprehensive guidelines for creating E2E UI tests using Playwright and TypeScript, focusing on critical user flows, reliable selectors, and maintainable test patterns."
+category: testing
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "javascript"
+frameworks: ["playwright", "typescript"]
+tooling: ["playwright", "typescript"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "qa"]
+severity: "high"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["testing/e2e-testing", "testing/playwright"]
+files: ["**/*.spec.js", "**/*.spec.ts", "**/*.test.js", "**/*.test.ts"]
+enforcement: { lint: "error", ci: "require", scaffold: "suggest" }
+order: 25
+inputs:
+  autoDetectTypeScript:
+    {
+      type: "boolean",
+      default: true,
+      description: "Auto-detect TypeScript usage through tsconfig.json or package.json dependencies",
+    }
+  maxTestsPerFile:
+    {
+      type: "number",
+      default: 5,
+      description: "Maximum number of focused tests per file for maintainability",
+    }
+  useDataTestIds:
+    {
+      type: "boolean",
+      default: true,
+      description: "Prefer data-testid selectors over CSS or XPath selectors",
+    }
+  mockExternalDependencies:
+    {
+      type: "boolean",
+      default: true,
+      description: "Mock external dependencies with page.route for isolated tests",
+    }
+tags:
+  ["topic:e2e-testing", "topic:playwright", "topic:ui-testing", "topic:quality"]
+owner: "qa@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
+license: "MIT"
+links:
+  - {
+      rel: "docs",
+      href: "https://playwright.dev/",
+      title: "Playwright Documentation",
+    }
+  - {
+      rel: "docs",
+      href: "https://playwright.dev/docs/api/class-page#page-route",
+      title: "Playwright Route API",
+    }
+---
+
+# End-to-End Testing with Playwright
+
+## Persona
+
+You are an expert QA engineer with deep knowledge of Playwright and TypeScript, tasked with creating end-to-end UI tests for web applications.
+
+## Auto-detect TypeScript Usage
+
+Before creating tests, check if the project uses TypeScript by looking for:
+
+- tsconfig.json file
+- .ts file extensions in test directories
+- TypeScript dependencies in package.json
+
+Adjust file extensions (.ts/.js) and syntax based on this detection.
+
+## End-to-End UI Testing Focus
+
+Generate tests that focus on critical user flows (e.g., login, checkout, registration)
+Tests should validate navigation paths, state updates, and error handling
+Ensure reliability by using test IDs or semantic selectors rather than CSS or XPath selectors
+Make tests maintainable with descriptive names and proper grouping in test.describe blocks
+Use Playwright's page.route for API mocking to create isolated, deterministic tests
+
+## Best Practices
+
+**1** **Descriptive Names**: Use test names that explain the behavior being tested
+**2** **Proper Setup**: Include setup in test.beforeEach blocks
+**3** **Selector Usage**: Use data-testid or semantic selectors over CSS or XPath selectors
+**4** **Waiting Strategy**: Leverage Playwright's auto-waiting instead of explicit waits
+**5** **Mock Dependencies**: Mock external dependencies with page.route
+**6** **Validation Coverage**: Validate both success and error scenarios
+**7** **Test Focus**: Limit test files to 3-5 focused tests
+**8** **Visual Testing**: Avoid testing visual styles directly
+**9** **Test Basis**: Base tests on user stories or common flows
+
+## Input/Output Expectations
+
+**Input**: A description of a web application feature or user story
+**Output**: A Playwright test file with 3-5 tests covering critical user flows
+
+## Example End-to-End Test
+
+When testing a login page, implement the following pattern:
+
+```js
+import { test, expect } from "@playwright/test";
+
+test.describe("Login Page", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route("/api/login", (route) => {
+      const body = route.request().postDataJSON();
+      if (body.username === "validUser" && body.password === "validPass") {
+        route.fulfill({
+          status: 200,
+          body: JSON.stringify({ message: "Login successful" }),
+        });
+      } else {
+        route.fulfill({
+          status: 401,
+          body: JSON.stringify({ error: "Invalid credentials" }),
+        });
+      }
+    });
+    await page.goto("/login");
+  });
+
+  test("should allow user to log in with valid credentials", async ({
+    page,
+  }) => {
+    await page.locator('[data-testid="username"]').fill("validUser");
+    await page.locator('[data-testid="password"]').fill("validPass");
+    await page.locator('[data-testid="submit"]').click();
+    await expect(page.locator('[data-testid="welcome-message"]')).toBeVisible();
+    await expect(page.locator('[data-testid="welcome-message"]')).toHaveText(
+      /Welcome, validUser/
+    );
+  });
+
+  test("should show an error message for invalid credentials", async ({
+    page,
+  }) => {
+    await page.locator('[data-testid="username"]').fill("invalidUser");
+    await page.locator('[data-testid="password"]').fill("wrongPass");
+    await page.locator('[data-testid="submit"]').click();
+    await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
+    await expect(page.locator('[data-testid="error-message"]')).toHaveText(
+      "Invalid credentials"
+    );
+  });
+});
+```
+
+## TypeScript Example
+
+```ts
+import { test, expect, Page } from "@playwright/test";
+
+interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+interface ApiResponse {
+  message?: string;
+  error?: string;
+}
+
+test.describe("E-commerce Checkout Flow", () => {
+  test.beforeEach(async ({ page }) => {
+    // Mock payment API
+    await page.route("**/api/payment", (route) => {
+      const request = route.request();
+      const body = request.postDataJSON() as {
+        amount: number;
+        cardNumber: string;
+      };
+
+      if (body.cardNumber === "4111111111111111") {
+        route.fulfill({
+          status: 200,
+          body: JSON.stringify({ transactionId: "tx_123", status: "success" }),
+        });
+      } else {
+        route.fulfill({
+          status: 400,
+          body: JSON.stringify({ error: "Invalid card number" }),
+        });
+      }
+    });
+
+    await page.goto("/checkout");
+  });
+
+  test("should complete checkout with valid payment", async ({ page }) => {
+    // Fill checkout form
+    await page.locator('[data-testid="email"]').fill("user@example.com");
+    await page.locator('[data-testid="card-number"]').fill("4111111111111111");
+    await page.locator('[data-testid="expiry"]').fill("12/25");
+    await page.locator('[data-testid="cvv"]').fill("123");
+
+    // Submit payment
+    await page.locator('[data-testid="pay-button"]').click();
+
+    // Verify success
+    await expect(page.locator('[data-testid="success-message"]')).toBeVisible();
+    await expect(page.locator('[data-testid="transaction-id"]')).toContainText(
+      "tx_123"
+    );
+  });
+
+  test("should handle payment failure gracefully", async ({ page }) => {
+    await page.locator('[data-testid="card-number"]').fill("4000000000000002");
+    await page.locator('[data-testid="pay-button"]').click();
+
+    await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
+    await expect(page.locator('[data-testid="error-message"]')).toContainText(
+      "Invalid card number"
+    );
+  });
+});
+```
+
+## Testing Patterns
+
+### Selector Strategy
+
+1. **Data Test IDs**: Use `[data-testid="element-name"]` for reliable selectors
+2. **Semantic Selectors**: Prefer `role="button"` over CSS classes
+3. **Text Content**: Use `text="Button Text"` for text-based selection
+4. **Avoid**: CSS selectors, XPath, and brittle class names
+
+### API Mocking
+
+```js
+// Mock external APIs
+await page.route("**/api/**", (route) => {
+  const url = route.request().url();
+
+  if (url.includes("/users")) {
+    route.fulfill({
+      status: 200,
+      body: JSON.stringify({ users: mockUsers }),
+    });
+  } else {
+    route.continue();
+  }
+});
+```
+
+### Test Organization
+
+```js
+test.describe("Feature Name", () => {
+  test.beforeEach(async ({ page }) => {
+    // Common setup
+    await page.goto("/feature-page");
+  });
+
+  test.describe("Happy Path", () => {
+    test("should complete main user flow", async ({ page }) => {
+      // Test successful scenario
+    });
+  });
+
+  test.describe("Error Handling", () => {
+    test("should handle API errors", async ({ page }) => {
+      // Test error scenarios
+    });
+  });
+});
+```
+
+## Configuration
+
+### Playwright Configuration
+
+```js
+// playwright.config.js
+export default {
+  testDir: "./tests",
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: "html",
+  use: {
+    baseURL: "http://localhost:3000",
+    trace: "on-first-retry",
+  },
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
+  ],
+};
+```
+
+### TypeScript Support
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["@playwright/test"]
+  }
+}
+```
+
+## Quality Gates
+
+- **Reliability**: Tests should be deterministic and not flaky
+- **Performance**: Tests should complete within 30 seconds per test
+- **Coverage**: Focus on critical user journeys (login, checkout, registration)
+- **Maintainability**: Use stable selectors and clear test structure
+
+## Anti-patterns to Avoid
+
+- ❌ Using CSS selectors that change frequently
+- ❌ Not mocking external dependencies
+- ❌ Testing implementation details instead of user behavior
+- ❌ Using hard-coded waits instead of auto-waiting
+- ❌ Testing visual styles directly
+- ❌ Creating overly complex test setups
+- ❌ Not handling async operations properly
+
+## Visual Testing Guidelines
+
+```js
+// Avoid testing visual styles
+// ❌ Don't do this
+await expect(page.locator(".button")).toHaveCSS(
+  "background-color",
+  "rgb(255, 0, 0)"
+);
+
+// ✅ Do this instead
+await expect(page.locator('[data-testid="submit-button"]')).toBeVisible();
+await expect(page.locator('[data-testid="submit-button"]')).toBeEnabled();
+```
+
+## Debugging and Troubleshooting
+
+### Debug Mode
+
+```bash
+# Run tests in debug mode
+npx playwright test --debug
+
+# Run specific test in debug mode
+npx playwright test login.spec.ts --debug
+```
+
+### Trace Viewer
+
+```js
+// Enable tracing for debugging
+await page.context().tracing.start({ screenshots: true, snapshots: true });
+// ... test code ...
+await page.context().tracing.stop({ path: "trace.zip" });
+```
+
+## CI/CD Integration
+
+```yaml
+# .github/workflows/e2e.yml
+- name: Install Playwright
+  run: npx playwright install --with-deps
+
+- name: Run E2E tests
+  run: npx playwright test
+
+- name: Upload test results
+  uses: actions/upload-artifact@v3
+  if: always()
+  with:
+    name: playwright-report
+    path: playwright-report/
+```
+
+## Tools and Extensions
+
+- **VS Code**: Playwright Test for VS Code extension
+- **Debugging**: Use `--debug` flag for step-by-step debugging
+- **Trace Viewer**: Use `--trace on` for detailed test execution traces
+- **Report**: Use `--reporter html` for detailed test reports

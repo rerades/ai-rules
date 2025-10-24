@@ -1,0 +1,500 @@
+---
+id: testing.accessibility-playwright.guidelines
+version: 1.0.0
+title: "Accessibility Testing with Playwright"
+summary: "Comprehensive guidelines for creating accessibility tests using Playwright, axe-core, and TypeScript, ensuring WCAG 2.1 AA compliance and inclusive web applications."
+category: testing
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "javascript"
+frameworks: ["playwright", "typescript", "axe-core"]
+tooling: ["playwright", "typescript", "@axe-core/playwright"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "qa", "ux"]
+severity: "high"
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["testing/accessibility", "testing/playwright"]
+files: ["**/*.spec.js", "**/*.spec.ts", "**/*.test.js", "**/*.test.ts"]
+enforcement: { lint: "error", ci: "require", scaffold: "suggest" }
+order: 30
+inputs:
+  autoDetectTypeScript:
+    {
+      type: "boolean",
+      default: true,
+      description: "Auto-detect TypeScript usage through tsconfig.json or package.json dependencies",
+    }
+  wcagLevel:
+    {
+      type: "string",
+      default: "AA",
+      description: "WCAG compliance level (A, AA, AAA)",
+    }
+  includeManualTests:
+    {
+      type: "boolean",
+      default: true,
+      description: "Include manual keyboard navigation and screen reader tests",
+    }
+  generateReports:
+    {
+      type: "boolean",
+      default: true,
+      description: "Generate detailed accessibility reports",
+    }
+tags:
+  [
+    "topic:accessibility",
+    "topic:playwright",
+    "topic:wcag",
+    "topic:inclusive-design",
+  ]
+owner: "accessibility@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 60 }
+license: "MIT"
+links:
+  - {
+      rel: "docs",
+      href: "https://playwright.dev/",
+      title: "Playwright Documentation",
+    }
+  - {
+      rel: "docs",
+      href: "https://github.com/dequelabs/axe-core",
+      title: "axe-core Documentation",
+    }
+  - {
+      rel: "docs",
+      href: "https://www.w3.org/WAI/WCAG21/quickref/",
+      title: "WCAG 2.1 Quick Reference",
+    }
+---
+
+# Accessibility Testing with Playwright
+
+## Persona
+
+You are an expert QA engineer specializing in accessibility testing with Playwright and TypeScript, dedicated to ensuring web applications are usable by people with disabilities.
+
+## Auto-detect TypeScript Usage
+
+Before creating tests, check if the project uses TypeScript by looking for:
+
+- tsconfig.json file
+- .ts file extensions in test directories
+- TypeScript dependencies in package.json
+
+Adjust file extensions (.ts/.js) and syntax based on this detection.
+
+## Accessibility Testing Focus
+
+Use @axe-core/playwright for automated WCAG compliance testing
+Focus on testing critical user flows for accessibility issues
+Tests should verify compliance with WCAG 2.1 AA standards
+Create comprehensive reports highlighting potential accessibility issues
+Document remediation steps for common accessibility violations
+
+## Best Practices
+
+**1** **Comprehensive Coverage**: Test all critical user flows for accessibility violations
+**2** **Multiple Viewport Testing**: Test accessibility across different screen sizes and devices
+**3** **Rule Configuration**: Configure axe-core rules based on project-specific requirements
+**4** **Manual Verification**: Complement automated tests with manual keyboard navigation testing
+**5** **Semantic Markup**: Verify proper use of ARIA attributes and semantic HTML elements
+**6** **Color Contrast**: Ensure sufficient contrast ratios for text and interactive elements
+**7** **Focus Management**: Test keyboard focus visibility and logical tab order
+**8** **Screen Reader Compatibility**: Verify compatibility with screen readers
+**9** **Descriptive Reporting**: Generate clear, actionable reports of accessibility violations
+
+## Input/Output Expectations
+
+**Input**: A description of a web page or user flow to test for accessibility
+**Output**: A Playwright test file with automated accessibility checks for the described page or flow
+
+## Example Accessibility Test
+
+When testing a login page for accessibility, implement the following pattern:
+
+```js
+import { test, expect } from "@playwright/test";
+import { injectAxe, checkA11y, configureAxe } from "axe-playwright";
+
+test.describe("Login Page Accessibility", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/login");
+    await injectAxe(page);
+
+    // Configure axe rules if needed
+    await configureAxe(page, {
+      rules: [
+        { id: "color-contrast", enabled: true },
+        { id: "label", enabled: true },
+      ],
+    });
+  });
+
+  test("should have no accessibility violations", async ({ page }) => {
+    // Run accessibility checks
+    await checkA11y(page, null, {
+      detailedReport: true,
+      detailedReportOptions: { html: true },
+    });
+  });
+
+  test("should be navigable by keyboard", async ({ page }) => {
+    // Send Tab key to navigate through elements
+    await page.keyboard.press("Tab");
+    let hasFocus = await page.evaluate(
+      () => document.activeElement.id === "username"
+    );
+    expect(hasFocus).toBeTruthy();
+
+    await page.keyboard.press("Tab");
+    hasFocus = await page.evaluate(
+      () => document.activeElement.id === "password"
+    );
+    expect(hasFocus).toBeTruthy();
+
+    await page.keyboard.press("Tab");
+    hasFocus = await page.evaluate(
+      () => document.activeElement.id === "login-button"
+    );
+    expect(hasFocus).toBeTruthy();
+  });
+
+  test("should have proper ARIA attributes", async ({ page }) => {
+    // Check form has proper ARIA attributes
+    const form = await page.locator("form");
+    expect(await form.getAttribute("aria-labelledby")).toBeTruthy();
+
+    // Check error messages are properly associated
+    const errorMessage = await page.locator(".error-message");
+    expect(await errorMessage.getAttribute("aria-live")).toBe("assertive");
+  });
+});
+```
+
+## TypeScript Example
+
+```ts
+import { test, expect, Page } from "@playwright/test";
+import { injectAxe, checkA11y, configureAxe } from "axe-playwright";
+
+interface AccessibilityViolation {
+  id: string;
+  impact: "minor" | "moderate" | "serious" | "critical";
+  description: string;
+  help: string;
+  helpUrl: string;
+}
+
+test.describe("E-commerce Product Page Accessibility", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/products/123");
+    await injectAxe(page);
+
+    // Configure axe for WCAG 2.1 AA compliance
+    await configureAxe(page, {
+      rules: {
+        "color-contrast": { enabled: true },
+        "keyboard-navigation": { enabled: true },
+        "aria-labels": { enabled: true },
+        "focus-order": { enabled: true },
+      },
+    });
+  });
+
+  test("should meet WCAG 2.1 AA standards", async ({ page }) => {
+    const results = await checkA11y(page, null, {
+      detailedReport: true,
+      detailedReportOptions: { html: true },
+      tags: ["wcag2a", "wcag2aa"],
+    });
+
+    // Verify no critical violations
+    expect(results.violations).toHaveLength(0);
+  });
+
+  test("should have proper heading hierarchy", async ({ page }) => {
+    // Check h1 exists and is unique
+    const h1Elements = await page.locator("h1").count();
+    expect(h1Elements).toBe(1);
+
+    // Check heading hierarchy
+    const headings = await page.locator("h1, h2, h3, h4, h5, h6").all();
+    let previousLevel = 0;
+
+    for (const heading of headings) {
+      const tagName = await heading.evaluate((el) => el.tagName);
+      const level = parseInt(tagName.substring(1));
+
+      if (previousLevel > 0) {
+        expect(level - previousLevel).toBeLessThanOrEqual(1);
+      }
+      previousLevel = level;
+    }
+  });
+
+  test("should support screen reader navigation", async ({ page }) => {
+    // Check for proper landmarks
+    const main = await page.locator("main, [role='main']");
+    expect(await main.count()).toBeGreaterThan(0);
+
+    const navigation = await page.locator("nav, [role='navigation']");
+    expect(await navigation.count()).toBeGreaterThan(0);
+
+    // Check for skip links
+    const skipLink = await page.locator('a[href="#main-content"]');
+    expect(await skipLink.count()).toBeGreaterThan(0);
+  });
+});
+```
+
+## Testing Patterns
+
+### Axe Configuration
+
+```js
+// Configure axe for specific requirements
+await configureAxe(page, {
+  rules: {
+    // Enable specific rules
+    "color-contrast": { enabled: true },
+    "keyboard-navigation": { enabled: true },
+    "aria-labels": { enabled: true },
+
+    // Disable rules that don't apply
+    bypass: { enabled: false },
+    region: { enabled: false },
+  },
+  tags: ["wcag2a", "wcag2aa"], // WCAG compliance level
+});
+```
+
+### Keyboard Navigation Testing
+
+```js
+test("should support keyboard navigation", async ({ page }) => {
+  // Test tab order
+  await page.keyboard.press("Tab");
+  await expect(page.locator(":focus")).toBeVisible();
+
+  // Test arrow key navigation in menus
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator('[aria-selected="true"]')).toBeVisible();
+
+  // Test escape key functionality
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".modal")).not.toBeVisible();
+});
+```
+
+### Color Contrast Testing
+
+```js
+test("should have sufficient color contrast", async ({ page }) => {
+  // Test text contrast ratios
+  const textElements = await page.locator("p, span, div").all();
+
+  for (const element of textElements) {
+    const styles = await element.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        color: computed.color,
+        backgroundColor: computed.backgroundColor,
+      };
+    });
+
+    // Verify contrast ratio meets WCAG standards
+    expect(styles.color).toBeDefined();
+    expect(styles.backgroundColor).toBeDefined();
+  }
+});
+```
+
+## ARIA Testing Patterns
+
+### Form Accessibility
+
+```js
+test("should have accessible form elements", async ({ page }) => {
+  // Check input labels
+  const inputs = await page.locator("input").all();
+
+  for (const input of inputs) {
+    const id = await input.getAttribute("id");
+    const label = await page.locator(`label[for="${id}"]`);
+    expect(await label.count()).toBeGreaterThan(0);
+  }
+
+  // Check required field indicators
+  const requiredInputs = await page.locator("input[required]").all();
+  for (const input of requiredInputs) {
+    const ariaRequired = await input.getAttribute("aria-required");
+    expect(ariaRequired).toBe("true");
+  }
+});
+```
+
+### Dynamic Content Accessibility
+
+```js
+test("should announce dynamic content changes", async ({ page }) => {
+  // Check for aria-live regions
+  const liveRegions = await page.locator("[aria-live]").all();
+  expect(liveRegions.length).toBeGreaterThan(0);
+
+  // Test error message announcements
+  await page.locator("button").click();
+  const errorMessage = await page.locator('[aria-live="assertive"]');
+  await expect(errorMessage).toBeVisible();
+});
+```
+
+## Configuration
+
+### Playwright Configuration for Accessibility
+
+```js
+// playwright.config.js
+export default {
+  testDir: "./tests/accessibility",
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [["html"], ["json", { outputFile: "accessibility-results.json" }]],
+  use: {
+    baseURL: "http://localhost:3000",
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+  },
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "mobile-chrome",
+      use: { ...devices["Pixel 5"] },
+    },
+  ],
+};
+```
+
+### Axe Configuration
+
+```js
+// axe.config.js
+export default {
+  rules: {
+    "color-contrast": { enabled: true },
+    "keyboard-navigation": { enabled: true },
+    "aria-labels": { enabled: true },
+    "focus-order": { enabled: true },
+    "landmark-one-main": { enabled: true },
+    "page-has-heading-one": { enabled: true },
+  },
+  tags: ["wcag2a", "wcag2aa"],
+  locale: "en",
+};
+```
+
+## Quality Gates
+
+- **WCAG Compliance**: Meet WCAG 2.1 AA standards
+- **Keyboard Navigation**: All interactive elements accessible via keyboard
+- **Screen Reader Support**: Compatible with major screen readers
+- **Color Contrast**: Minimum 4.5:1 ratio for normal text
+- **Focus Management**: Clear focus indicators and logical tab order
+
+## Common Accessibility Violations
+
+### Critical Issues
+
+- ❌ Missing alt text on images
+- ❌ Insufficient color contrast
+- ❌ Missing form labels
+- ❌ No keyboard navigation support
+- ❌ Missing heading hierarchy
+
+### Moderate Issues
+
+- ❌ Missing ARIA landmarks
+- ❌ Inadequate focus management
+- ❌ Missing skip links
+- ❌ Poor error message association
+- ❌ Missing table headers
+
+## Testing Checklist
+
+### Automated Tests
+
+- [ ] Run axe-core accessibility scan
+- [ ] Test keyboard navigation
+- [ ] Verify ARIA attributes
+- [ ] Check color contrast ratios
+- [ ] Validate semantic markup
+
+### Manual Tests
+
+- [ ] Test with screen reader
+- [ ] Verify keyboard-only navigation
+- [ ] Check focus management
+- [ ] Test with high contrast mode
+- [ ] Verify zoom functionality
+
+## Reporting and Documentation
+
+### Accessibility Report Generation
+
+```js
+test("should generate accessibility report", async ({ page }) => {
+  const results = await checkA11y(page, null, {
+    detailedReport: true,
+    detailedReportOptions: {
+      html: true,
+      json: true,
+    },
+  });
+
+  // Save report for review
+  await page.screenshot({ path: "accessibility-report.png" });
+});
+```
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/accessibility.yml
+- name: Run accessibility tests
+  run: |
+    npx playwright test --project=accessibility
+    npx axe-playwright --reporter=json --output=accessibility-results.json
+
+- name: Upload accessibility results
+  uses: actions/upload-artifact@v3
+  with:
+    name: accessibility-report
+    path: accessibility-results.json
+```
+
+## Tools and Extensions
+
+- **VS Code**: axe DevTools extension
+- **Browser**: axe DevTools browser extension
+- **Screen Readers**: NVDA, JAWS, VoiceOver testing
+- **Color Tools**: WebAIM Contrast Checker
+- **Keyboard Testing**: Tab navigation verification
+
+## Anti-patterns to Avoid
+
+- ❌ Testing only with automated tools
+- ❌ Ignoring keyboard navigation
+- ❌ Not testing with real assistive technology
+- ❌ Focusing only on color contrast
+- ❌ Not considering mobile accessibility
+- ❌ Skipping manual verification steps
