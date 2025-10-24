@@ -2,7 +2,7 @@
 id: templates.architecture.documentation
 version: 1.0.0
 title: "Architecture Documentation Template"
-summary: "Standard template and guidelines for creating comprehensive architecture documentation."
+description: "Standard template and guidelines for creating comprehensive architecture documentation."
 category: templates
 scope: ["global", "repo", "package"]
 language: "markdown"
@@ -13,6 +13,8 @@ maturity: "stable"
 stability: "locked"
 audience: ["architect", "tech-lead", "fullstack", "backend", "frontend"]
 severity: "low"
+alwaysApply: false
+globs: ["**/architecture.md", "**/ARCHITECTURE.md", "docs/architecture/**/*"]
 requires: ["documentation.markdown-standards"]
 conflicts: []
 supersedes: []

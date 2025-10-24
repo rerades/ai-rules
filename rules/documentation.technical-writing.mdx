@@ -2,7 +2,7 @@
 id: documentation.technical-writing.guidelines
 version: 1.0.0
 title: "Technical Writing Guidelines"
-summary: "Standards for writing clear, in-depth technical tutorials and documentation for developers."
+description: "Standards for writing clear, in-depth technical tutorials and documentation for developers."
 category: documentation
 scope: ["global", "repo", "package", "workspace"]
 language: "markdown"
@@ -13,6 +13,8 @@ maturity: "stable"
 stability: "locked"
 audience: ["technical-writer", "frontend", "backend", "fullstack"]
 severity: "low"
+alwaysApply: false
+globs: ["**/*.{md,mdx,markdown}", "**/*.{ts,tsx,js,jsx}", "docs/**/*"]
 requires: ["documentation.markdown-standards"]
 conflicts: []
 supersedes: []
