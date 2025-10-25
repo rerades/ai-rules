@@ -1,0 +1,407 @@
+---
+id: general.rule-creation-guidelines
+version: 1.0.0
+title: "Rule Creation Guidelines"
+description: "Comprehensive guidelines for creating new rules that comply with schema validation, avoid conflicts, and maintain consistency across the rule system."
+category: foundation
+scope: ["global", "repo", "package", "workspace"]
+language: "none"
+frameworks: ["none"]
+tooling: ["eslint", "prettier"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack", "docs"]
+severity: "high"
+alwaysApply: true
+globs: ["**/*.mdx", "**/*.mdc"]
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["foundation/rule-creation", "foundation/validation"]
+files: ["rules/**/*.mdx", ".cursor/rules/**/*.mdc"]
+enforcement: { lint: "error", ci: "block", scaffold: "required" }
+order: 1
+inputs:
+  enableConflictDetection:
+    {
+      type: "boolean",
+      default: true,
+      description: "Enable automatic conflict detection between rules",
+    }
+  strictSchemaValidation:
+    {
+      type: "boolean",
+      default: true,
+      description: "Enforce strict schema validation for all rule metadata",
+    }
+  overlapDetection:
+    {
+      type: "boolean",
+      default: true,
+      description: "Detect and warn about overlapping rule instructions",
+    }
+tags:
+  [
+    "topic:rule-creation",
+    "topic:validation",
+    "topic:conflict-detection",
+    "topic:schema-compliance",
+  ]
+owner: "foundation@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "mdc.schema.json", title: "Schema Definition" }
+  - {
+      rel: "docs",
+      href: "https://json-schema.org/",
+      title: "JSON Schema Specification",
+    }
+---
+
+## Rule Creation Guidelines
+
+You are an expert in creating comprehensive, well-structured rules that integrate seamlessly into the existing rule system. Your task is to ensure every new rule follows strict schema compliance, avoids conflicts, and maintains consistency.
+
+## Core Principles
+
+### 1. Schema Compliance (CRITICAL)
+
+**ALWAYS validate against `mdc.schema.json` before creating any rule.**
+
+```yaml
+# ✅ CORRECT: All required fields present and valid
+---
+id: language.typescript.conventions
+version: 1.0.0
+title: "TypeScript Conventions"
+category: language
+language: typescript
+frameworks: ["typescript", "react"]
+tooling: ["typescript", "eslint"]
+audience: ["frontend", "backend", "fullstack"]
+enforcement: { lint: "error", ci: "block", scaffold: "add" }
+---
+# ❌ INCORRECT: Missing required fields or invalid values
+---
+title: "Bad Rule"
+category: invalid-category # Not in schema enum
+language: invalid-lang # Not in schema enum
+# Missing required fields: id, version, category
+---
+```
+
+**Required Fields Checklist:**
+
+- [ ] `id`: Must match pattern `^[a-z0-9]+(\\.[a-z0-9-]+)+$`
+- [ ] `version`: Must be semantic version (e.g., "1.0.0")
+- [ ] `title`: Minimum 3 characters
+- [ ] `category`: Must be from schema enum
+- [ ] `language`: Must be from schema enum (or "none")
+- [ ] `frameworks`: Array of valid framework names
+- [ ] `tooling`: Array of valid tooling names
+- [ ] `audience`: Array of valid audience roles
+- [ ] `enforcement`: Object with valid lint/ci/scaffold values
+
+### 2. Conflict Detection and Resolution
+
+**Before creating a new rule, analyze existing rules for potential conflicts:**
+
+```markdown
+# Conflict Analysis Process
+
+1. **Check `conflicts` field** in existing rules
+2. **Identify overlapping scope** (same files, same audience)
+3. **Detect contradictory instructions** (opposite enforcement levels)
+4. **Find redundant functionality** (same tooling, same frameworks)
+
+# Example Conflict Detection
+```
+
+**Common Conflict Patterns:**
+
+```yaml
+# ❌ CONFLICT: Two rules with opposite enforcement
+# Rule A
+enforcement: { lint: "error", ci: "block" }
+
+# Rule B (conflicts with A)
+enforcement: { lint: "off", ci: "allow" }
+```
+
+**Resolution Strategies:**
+
+- **Merge**: Combine complementary rules
+- **Specialize**: Make rules more specific to different contexts
+- **Deprecate**: Mark older rule as superseded
+- **Split**: Divide broad rule into focused sub-rules
+
+### 3. Overlap Prevention
+
+**Identify and eliminate overlapping instructions:**
+
+```markdown
+# Overlap Detection Checklist
+
+## Scope Overlap
+
+- [ ] Same `globs` patterns
+- [ ] Same `files` patterns
+- [ ] Same `scope` values
+- [ ] Same `audience` roles
+
+## Content Overlap
+
+- [ ] Similar rule descriptions
+- [ ] Same tooling recommendations
+- [ ] Identical enforcement strategies
+- [ ] Duplicate code examples
+
+## Functional Overlap
+
+- [ ] Same frameworks covered
+- [ ] Same language features
+- [ ] Same testing approaches
+- [ ] Same performance optimizations
+```
+
+## Rule Creation Process
+
+### Step 1: Schema Validation
+
+```yaml
+# Template for new rules
+---
+id: [category].[subcategory].[specific-rule]
+version: 1.0.0
+title: "[Descriptive Title]"
+description: "[Clear, specific description of what this rule covers]"
+category: [foundation|language|framework|tooling|qa|security|accessibility|performance|architecture|documentation|templates|typescript|testing|code]
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: [js|ts|python|java|go|rust|html|css|shell|none|javascript|typescript|markdown]
+frameworks: ["react", "astro", "vue", "none", "typescript", "lighthouse", "playwright", "vitest"]
+tooling: ["eslint", "prettier", "vitest", "playwright", "lighthouse", "typescript", "tsc"]
+lifecycle: [advisory|recommended|enforced]
+maturity: [draft|beta|stable|deprecated]
+stability: [experimental|evolving|locked]
+audience: ["frontend", "backend", "fullstack", "qa", "docs", "technical-writer", "performance-engineer"]
+severity: [info|low|medium|high|critical]
+alwaysApply: [true|false]
+globs: ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx"]
+requires: ["other.rule.id"]
+conflicts: ["conflicting.rule.id"]
+supersedes: ["old.rule.id"]
+bundles: ["category/subcategory"]
+files: ["**/*.js", "**/*.ts"]
+enforcement: { lint: "error", ci: "block", scaffold: "add" }
+order: [0-1000]
+inputs:
+  parameterName:
+    {
+      type: "boolean",
+      default: true,
+      description: "Parameter description",
+    }
+tags: ["topic:category", "topic:specific-topic"]
+owner: "team@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
+license: "MIT"
+links:
+  - { rel: "docs", href: "https://example.com", title: "Documentation Title" }
+  - { rel: "related", href: "other.rule.id", description: "Related rule description" }
+---
+```
+
+### Step 2: Conflict Analysis
+
+```markdown
+# Conflict Analysis Template
+
+## Existing Rules Analysis
+
+- [ ] Check all rules in same category
+- [ ] Review rules with same scope
+- [ ] Analyze rules for same audience
+- [ ] Identify rules with same tooling
+
+## Potential Conflicts
+
+- [ ] **Scope conflicts**: Rules targeting same files/patterns
+- [ ] **Enforcement conflicts**: Contradictory lint/ci settings
+- [ ] **Content conflicts**: Overlapping instructions
+- [ ] **Tooling conflicts**: Different tools for same purpose
+
+## Resolution Plan
+
+- [ ] **Merge**: Combine complementary rules
+- [ ] **Specialize**: Make rules context-specific
+- [ ] **Deprecate**: Mark old rules as superseded
+- [ ] **Split**: Divide broad rules into focused ones
+```
+
+### Step 3: Overlap Detection
+
+```markdown
+# Overlap Detection Checklist
+
+## Content Overlap
+
+- [ ] **Descriptions**: Similar rule descriptions
+- [ ] **Examples**: Duplicate code examples
+- [ ] **Guidelines**: Identical recommendations
+- [ ] **Anti-patterns**: Same warnings/avoidances
+
+## Functional Overlap
+
+- [ ] **Tooling**: Same tools recommended
+- [ ] **Frameworks**: Same frameworks covered
+- [ ] **Patterns**: Same coding patterns
+- [ ] **Practices**: Same best practices
+
+## Scope Overlap
+
+- [ ] **Files**: Same file patterns
+- [ ] **Directories**: Same directory scopes
+- [ ] **Extensions**: Same file extensions
+- [ ] **Projects**: Same project types
+```
+
+## Rule Quality Standards
+
+### 1. Completeness
+
+```markdown
+# Complete Rule Checklist
+
+## Metadata Completeness
+
+- [ ] All required fields present
+- [ ] All enum values valid
+- [ ] All patterns match schema
+- [ ] All relationships defined
+
+## Content Completeness
+
+- [ ] Clear, specific title
+- [ ] Comprehensive description
+- [ ] Detailed guidelines
+- [ ] Practical examples
+- [ ] Anti-patterns included
+- [ ] Implementation steps
+- [ ] Testing recommendations
+```
+
+### 2. Consistency
+
+```markdown
+# Consistency Checklist
+
+## Naming Consistency
+
+- [ ] ID follows pattern: `category.subcategory.specific-rule`
+- [ ] Title is descriptive and specific
+- [ ] Description matches title scope
+- [ ] Tags follow `topic:category` pattern
+
+## Content Consistency
+
+- [ ] Tone matches other rules
+- [ ] Examples follow same format
+- [ ] Code style consistent
+- [ ] Terminology consistent
+```
+
+### 3. Clarity
+
+```markdown
+# Clarity Checklist
+
+## Language Clarity
+
+- [ ] Clear, concise descriptions
+- [ ] Specific, actionable guidelines
+- [ ] Concrete examples provided
+- [ ] Anti-patterns clearly marked
+
+## Structure Clarity
+
+- [ ] Logical section organization
+- [ ] Clear headings hierarchy
+- [ ] Consistent formatting
+- [ ] Easy navigation
+```
+
+## Validation Workflow
+
+### 1. Pre-Creation Validation
+
+```bash
+# Schema validation steps
+1. Check schema compliance
+2. Validate all enum values
+3. Verify pattern matches
+4. Confirm required fields
+```
+
+### 2. Conflict Detection
+
+```bash
+# Conflict detection steps
+1. Scan existing rules for overlaps
+2. Check conflicts field in related rules
+3. Analyze scope intersections
+4. Identify contradictory instructions
+```
+
+### 3. Post-Creation Validation
+
+```bash
+# Final validation steps
+1. Run schema validator
+2. Check for linting errors
+3. Verify no conflicts introduced
+4. Confirm rule integration
+```
+
+## Examples
+
+### ✅ Good Rule Creation
+
+```yaml
+---
+id: language.typescript.strict-mode
+version: 1.0.0
+title: "TypeScript Strict Mode Guidelines"
+description: "Enforce TypeScript strict mode configuration for enhanced type safety and better development experience."
+category: language
+language: typescript
+frameworks: ["typescript", "react", "next"]
+tooling: ["typescript", "tsc", "eslint"]
+audience: ["frontend", "backend", "fullstack"]
+enforcement: { lint: "error", ci: "block", scaffold: "add" }
+requires: ["typescript.conventions"]
+conflicts: ["typescript.loose-mode"]
+---
+```
+
+### ❌ Bad Rule Creation
+
+```yaml
+---
+title: "Bad Rule" # Missing required fields
+category: invalid # Not in schema enum
+language: bad-lang # Not in schema enum
+# Missing: id, version, frameworks, tooling, audience, enforcement
+---
+```
+
+## Remember
+
+1. **Schema First**: Always validate against schema before creating
+2. **Conflict Check**: Analyze existing rules for conflicts
+3. **Overlap Prevention**: Ensure no duplicate instructions
+4. **Quality Standards**: Follow completeness, consistency, and clarity guidelines
+5. **Validation Workflow**: Use pre-creation, conflict detection, and post-creation validation
+
+**Every rule must be schema-compliant, conflict-free, and overlap-free to maintain a cohesive rule system.**

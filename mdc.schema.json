@@ -22,6 +22,7 @@
     "category": {
       "type": "string",
       "enum": [
+        "code",
         "foundation",
         "language",
         "framework",
@@ -33,7 +34,6 @@
         "architecture",
         "documentation",
         "templates",
-        "typescript",
         "testing"
       ]
     },
@@ -60,8 +60,6 @@
     "language": {
       "type": "string",
       "enum": [
-        "js",
-        "ts",
         "python",
         "java",
         "go",
@@ -69,7 +67,11 @@
         "html",
         "css",
         "shell",
-        "none"
+        "none",
+        "javascript",
+        "node",
+        "typescript",
+        "markdown"
       ]
     },
     "frameworks": {
@@ -81,13 +83,13 @@
           "astro",
           "svelte",
           "vue",
+          "nuxt",
           "angular",
           "lit",
           "next",
           "remix",
           "node",
           "express",
-          "fastify",
           "none"
         ]
       },
@@ -124,7 +126,7 @@
           "yarn"
         ]
       },
-      "uniqueItems": true
+      "uniqueItems": false
     },
     "lifecycle": {
       "type": "string",
@@ -150,7 +152,11 @@
           "a11y",
           "sec",
           "devops",
-          "docs"
+          "technical-writer",
+          "performance-engineer",
+          "ux",
+          "architect",
+          "tech-lead"
         ]
       },
       "uniqueItems": true
@@ -189,8 +195,11 @@
       "additionalProperties": false,
       "properties": {
         "lint": { "type": "string", "enum": ["off", "warn", "error"] },
-        "ci": { "type": "string", "enum": ["allow", "block"] },
-        "scaffold": { "type": "string", "enum": ["none", "add", "update"] }
+        "ci": { "type": "string", "enum": ["allow", "block", "required"] },
+        "scaffold": {
+          "type": "string",
+          "enum": ["none", "add", "update", "required", "suggest"]
+        }
       }
     },
     "order": { "type": "integer", "minimum": 0, "maximum": 1000 },
@@ -237,11 +246,13 @@
         "properties": {
           "rel": {
             "type": "string",
-            "enum": ["docs", "adr", "source", "issue", "playbook"]
+            "enum": ["docs", "adr", "source", "issue", "playbook", "related"]
           },
-          "href": { "type": "string" }
+          "href": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       },
       "uniqueItems": true
     },
