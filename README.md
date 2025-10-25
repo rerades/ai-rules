@@ -1,102 +1,169 @@
-# ai-rules
+# AI Rules
 
-ai rules used in conjunction with ai-rules-cli to startup new projects with specific rules
+AI rules used in conjunction with [ai-rules-cli](https://github.com/rerades/ai-rules-cli) to bootstrap new projects with specific rules and guidelines.
 
-## Definición del metamodelo
+## Metamodel Definition
 
-- Composición guiada por el CLI (árbol de preguntas → selección de reglas).
-- Gobernanza de tags (evitar jungla taxonómica).
-- Compatibilidad/conflictos y requisitos entre reglas.
-- Auditoría (provenance, “last reviewed”, owner).
-- Evolución controlada (SemVer + estados de madurez).
+- CLI-guided composition (question tree → rule selection)
+- Tag governance (avoiding taxonomic jungle)
+- Compatibility/conflicts and requirements between rules
+- Audit trail (provenance, "last reviewed", owner)
+- Controlled evolution (SemVer + maturity states)
 
-### taxonomía
+## Taxonomy
 
-facetas fijas y valores cerrados. Si necesitas granularidad extra, usa tags con prefijos controlados (topic:_, lint:_, etc.)
-Facetas duras (enums):
+Fixed facets with closed values. For extra granularity, use tags with controlled prefixes (topic:_, lint:_, etc.)
 
-- category:
-  foundation | language | framework | tooling | qa | security | accessibility | performance | architecture | docs
+### Core Facets (Enums)
 
-- scope:
-  global | repo | package | workspace | app | component | page | route | api | ci | cd
+**Category:**
 
-- language:
-  js | ts | python | java | go | rust | html | css | shell | none
+- `code` | `foundation` | `language` | `framework` | `tooling` | `qa` | `security` | `accessibility` | `performance` | `architecture` | `documentation` | `templates` | `testing`
 
-- frameworks:
-  react | astro | svelte | vue | angular | lit | next | remix | node | express | fastify | none
+**Scope:**
 
-- tooling:
-  eslint | prettier | vitest | jest | playwright | wdio | cypress | lighthouse | axe | pa11y | msw | pact | snyk | osv | husky | lint-staged | turbo | vite | webpack | rollup | parcel | pnpm | npm | yarn
+- `global` | `repo` | `package` | `workspace` | `app` | `component` | `page` | `route` | `api` | `ci` | `cd`
 
-- lifecycle:
-  advisory | recommended | enforced (qué tan fuerte se exige)
+**Language:**
 
-- maturity:
-  draft | beta | stable | deprecated
+- `python` | `java` | `go` | `rust` | `html` | `css` | `shell` | `none` | `javascript` | `node` | `typescript` | `markdown`
 
-- stability:
-  experimental | evolving | locked
+**Frameworks:**
 
-- audience:
-  frontend | backend | fullstack | qa | a11y | sec | devops | docs
+- Any string matching pattern `^[a-zA-Z0-9@/._-]+$` (e.g., `react`, `astro`, `vue`, `angular`, `next`, `remix`, `node`, `express`, `fastify`)
 
-- severity:
-  info | low | medium | high | critical (impacto si se viola)
+**Tooling:**
 
-Campos relacionales:
+- Any string matching pattern `^[a-zA-Z0-9@/._-]+$` (e.g., `eslint`, `prettier`, `vitest`, `jest`, `playwright`, `cypress`, `lighthouse`, `axe`, `husky`, `lint-staged`, `turbo`, `vite`, `webpack`, `rollup`, `parcel`, `pnpm`, `npm`, `yarn`)
 
-- requires[]: lista de ruleId que deben estar presentes.
-- conflicts[]: lista de ruleId incompatibles.
-- supersedes[]: lista de ruleId a los que sustituye (ayuda en migraciones).
-- bundles[]: sugerencias de grupos (p.ej. baseline/web, baseline/react).
+**Lifecycle:**
 
-Campos operativos:
+- `advisory` | `recommended` | `enforced` (how strongly it's enforced)
 
-- files (globs): sobre qué rutas aplica (["src/**/*.tsx"]).
-- enforcement:
-- lint:off|warn|error
-- ci:allow|block
-- scaffold:none|add|update (si genera/edita archivos)
-- order (int): prioridad de composición (menor = entra antes).
-- inputs (para reglas parametrizables): { nombre → tipo/enum/default }.
+**Maturity:**
 
-Tags con prefijo (string[]):
+- `draft` | `beta` | `stable` | `deprecated`
 
-- topic:\* (ej. topic:core-web-vitals, topic:wcag22)
-- lint:\* (ej. lint:eslint-config, lint:typescript-eslint)
-- test:\* (ej. test:playwright, test:axe)
-- perf:\* (ej. perf:lhci, perf:tti)
-- a11y:\* (ej. a11y:aria, a11y:keyboard)
-- sec:\* (ej. sec:headers, sec:deps)
-- Regla: solo prefijos aprobados y máx. 5 tags.
+**Stability:**
 
-Gobernanza:
+- `experimental` | `evolving` | `locked`
 
-- Cambios de vocabulario → PR en el catálogo central con revisión de “Owners”.
-- Cualquier nuevo valor de enum → actualización del JSON Schema y CHANGELOG.
+**Audience:**
 
-### esquema de metadatos (JSON Schema)
+- `frontend` | `backend` | `fullstack` | `qa` | `a11y` | `sec` | `devops` | `technical-writer` | `performance-engineer` | `ux` | `architect` | `tech-lead`
 
-El esquema sigue el standard de [json-schema](https://json-schema.org/draft/2020-12/schema)
+**Severity:**
 
-### convención de IDs
+- `info` | `low` | `medium` | `high` | `critical` (impact if violated)
 
-Formato: dominio.subdominio.slug (mínimo 2 segmentos, snake prohibido, solo [a-z0-9-]).
+### Relational Fields
 
-Ejemplos:
+- **requires[]**: List of ruleId that must be present
+- **conflicts[]**: List of incompatible ruleId
+- **supersedes[]**: List of ruleId that this rule replaces (helps with migrations)
+- **bundles[]**: Group suggestions (e.g., `baseline/web`, `baseline/react`)
 
-- foundation.baseline.web
-- language.ts.strict
-- framework.react.hooks
-- performance.core-web-vitals
-- accessibility.wcag22.keyboard
-- qa.testing.playwright
-- security.headers.csp
+### Operational Fields
 
-Ventajas: búsqueda por prefijo, selección por árbol y orden lógico al componer.
+- **files/globs**: Paths where the rule applies (e.g., `["src/**/*.tsx"]`)
+- **enforcement**:
+  - `lint`: `off` | `warn` | `error`
+  - `ci`: `allow` | `block` | `required`
+  - `scaffold`: `none` | `add` | `update` | `required` | `suggest` (if it generates/edits files)
+- **order** (int): Composition priority (lower = enters first)
+- **inputs**: For parameterizable rules: `{ name → type/enum/default }`
 
-### ejemplo real de front-matter para un .mdc
+### Tagged Fields
 
-### cómo lo usa el CLI para un wizard condicional.
+**Tags with prefix (string[]):**
+
+- `topic:*` (e.g., `topic:core-web-vitals`, `topic:wcag22`)
+- `lint:*` (e.g., `lint:eslint-config`, `lint:typescript-eslint`)
+- `test:*` (e.g., `test:playwright`, `test:axe`)
+- `perf:*` (e.g., `perf:lhci`, `perf:tti`)
+- `a11y:*` (e.g., `a11y:aria`, `a11y:keyboard`)
+- `sec:*` (e.g., `sec:headers`, `sec:deps`)
+
+**Rule**: Only approved prefixes and max 5 tags.
+
+### Governance
+
+- Vocabulary changes → PR in central catalog with "Owners" review
+- Any new enum value → JSON Schema update and CHANGELOG
+
+## Metadata Schema (JSON Schema)
+
+The schema follows the [JSON Schema](https://json-schema.org/draft/2020-12/schema) standard and is defined in `mdc.schema.json`.
+
+## ID Convention
+
+Format: `domain.subdomain.slug` (minimum 2 segments, snake_case prohibited, only `[a-z0-9-]`).
+
+**Examples:**
+
+- `foundation.baseline.web`
+- `language.typescript.strict`
+- `framework.react.hooks`
+- `performance.core-web-vitals`
+- `accessibility.wcag22.keyboard`
+- `qa.testing.playwright`
+- `security.headers.csp`
+
+**Advantages**: Prefix search, tree selection, and logical order when composing.
+
+## Real Example of Front-matter for .mdx
+
+```yaml
+---
+id: typescript.conventions.guidelines
+version: 1.0.0
+title: "TypeScript Conventions Guidelines"
+description: "Import/export conventions, naming standards, and code style guidelines for TypeScript projects."
+category: language
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "typescript"
+frameworks: ["typescript", "react", "next", "astro"]
+tooling: ["typescript", "eslint", "prettier"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack"]
+severity: "low"
+alwaysApply: false
+globs: ["**/*.ts", "**/*.tsx", "**/*.astro"]
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["typescript/conventions", "typescript/style"]
+files: ["**/*.ts", "**/*.tsx", "**/*.astro"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 30
+inputs:
+  enforceImportType:
+    {
+      type: "boolean",
+      default: true,
+      description: "Enforce import type for type-only imports",
+    }
+tags: ["topic:typescript", "topic:conventions", "lint:typescript-eslint"]
+owner: "typescript-team@tu-org.com"
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
+license: "MIT"
+links:
+  - {
+      rel: "docs",
+      href: "https://typescript-eslint.io/",
+      title: "TypeScript ESLint",
+    }
+---
+```
+
+## How the CLI Uses This for Conditional Wizard
+
+The CLI uses the metadata to:
+
+1. **Filter rules** by category, language, frameworks, and tooling
+2. **Resolve dependencies** using `requires` and `conflicts` fields
+3. **Generate bundles** based on `bundles` field
+4. **Apply enforcement** based on `enforcement` settings
+5. **Order rules** using the `order` field for proper composition
