@@ -66,9 +66,54 @@ You are an expert in creating comprehensive, well-structured rules that integrat
 
 ## Core Principles
 
-### 1. Schema Compliance (CRITICAL)
+### 1. Schema as Single Source of Truth (CRITICAL)
+
+**ALWAYS reference `mdc.schema.json` for current valid values. Never hardcode enum values in rules.**
+
+The schema file (`mdc.schema.json`) is the authoritative source for:
+
+- Valid enum values for all fields
+- Required field patterns
+- Field constraints and validation rules
+- Default values and types
+
+**How to use the schema:**
+
+1. **For enum values**: Check `properties.[field].enum` in the schema
+2. **For patterns**: Check `properties.[field].pattern` in the schema
+3. **For required fields**: Check the `required` array at the root level
+4. **For field types**: Check `properties.[field].type` in the schema
+
+**Example schema navigation:**
+
+```json
+// For category enum values:
+"category": {
+  "enum": ["code", "foundation", "language", ...]
+}
+
+// For enforcement ci values:
+"enforcement": {
+  "properties": {
+    "ci": {
+      "enum": ["allow", "block", "required"]
+    }
+  }
+}
+```
+
+### 2. Schema Compliance (CRITICAL)
 
 **ALWAYS validate against `mdc.schema.json` before creating any rule.**
+
+**Schema Synchronization Rules:**
+
+- ✅ **DO**: Reference schema paths (e.g., `mdc.schema.json` → `properties.category.enum`)
+- ✅ **DO**: Use schema as single source of truth
+- ✅ **DO**: Update rule instructions when schema changes
+- ❌ **DON'T**: Hardcode enum values in rule instructions
+- ❌ **DON'T**: Copy enum values from schema to rules
+- ❌ **DON'T**: Assume enum values are static
 
 ```yaml
 # ✅ CORRECT: All required fields present and valid
@@ -94,17 +139,81 @@ language: invalid-lang # Not in schema enum
 
 **Required Fields Checklist:**
 
-- [ ] `id`: Must match pattern `^[a-z0-9]+(\\.[a-z0-9-]+)+$`
+**CRITICAL: Always validate against `mdc.schema.json` for current valid values. The schema is the single source of truth.**
+
+- [ ] `id`: Must match pattern defined in schema: `^[a-z0-9]+(\\.[a-z0-9-]+)+$`
 - [ ] `version`: Must be semantic version (e.g., "1.0.0")
 - [ ] `title`: Minimum 3 characters
-- [ ] `category`: Must be from schema enum
-- [ ] `language`: Must be from schema enum (or "none")
-- [ ] `frameworks`: Array of valid framework names
-- [ ] `tooling`: Array of valid tooling names
-- [ ] `audience`: Array of valid audience roles
-- [ ] `enforcement`: Object with valid lint/ci/scaffold values
+- [ ] `category`: Must be from schema enum (see `mdc.schema.json` → `properties.category.enum`)
+- [ ] `language`: Must be from schema enum (see `mdc.schema.json` → `properties.language.enum`)
+- [ ] `frameworks`: Array of valid framework names (pattern defined in schema)
+- [ ] `tooling`: Array of valid tooling names (pattern defined in schema)
+- [ ] `audience`: Array of valid audience roles (see `mdc.schema.json` → `properties.audience.items.enum`)
+- [ ] `enforcement`: Object with valid values (see `mdc.schema.json` → `properties.enforcement.properties`):
+  - `lint`: Values from schema enum
+  - `ci`: Values from schema enum (NOT "require" - use "required")
+  - `scaffold`: Values from schema enum
+- [ ] `supersedes`: Array of rule IDs matching pattern (NO version syntax like `@<=1.2.0`)
+- [ ] `requires`: Array of rule IDs matching pattern
+- [ ] `conflicts`: Array of rule IDs matching pattern
 
-### 2. Conflict Detection and Resolution
+### 2. Common Validation Errors to Avoid
+
+**CRITICAL: These are the most frequent validation errors that MUST be avoided:**
+
+#### ❌ Invalid Category Values
+
+```yaml
+# ❌ WRONG: "typescript" is not a valid category
+category: typescript
+
+# ✅ CORRECT: Use "language" for TypeScript rules
+category: language
+```
+
+#### ❌ Invalid Enforcement CI Values
+
+```yaml
+# ❌ WRONG: "require" is not valid
+enforcement: { lint: "error", ci: "require", scaffold: "suggest" }
+
+# ✅ CORRECT: Use "required" instead
+enforcement: { lint: "error", ci: "required", scaffold: "suggest" }
+```
+
+#### ❌ Invalid Supersedes Patterns
+
+```yaml
+# ❌ WRONG: Version syntax not allowed
+supersedes: ["performance.core-web-vitals@<=1.2.0"]
+
+# ✅ CORRECT: Use simple rule IDs
+supersedes: ["performance.core-web-vitals-legacy"]
+```
+
+#### ❌ Invalid Audience Values
+
+```yaml
+# ❌ WRONG: "docs" is not in the enum
+audience: ["frontend", "docs"]
+
+# ✅ CORRECT: Use "technical-writer"
+audience: ["frontend", "technical-writer"]
+```
+
+#### ❌ Inconsistent Arrays
+
+```yaml
+# ❌ WRONG: Using ["none"] instead of empty arrays
+frameworks: ["none"]
+tooling: ["none"]
+
+# ✅ CORRECT: Use empty arrays
+frameworks: []
+tooling: []
+```
+
+### 3. Conflict Detection and Resolution
 
 **Before creating a new rule, analyze existing rules for potential conflicts:**
 
@@ -166,9 +275,78 @@ enforcement: { lint: "off", ci: "allow" }
 - [ ] Same performance optimizations
 ```
 
+## Schema Maintenance Process
+
+### When Schema Changes
+
+**If `mdc.schema.json` is updated, you MUST:**
+
+1. **Update rule instructions** to reference new schema paths
+2. **Remove hardcoded enum values** from rule text
+3. **Add schema navigation examples** for new fields
+4. **Update validation checklists** to point to schema
+5. **Test rule creation** against new schema constraints
+
+**Example of schema-aware rule instruction:**
+
+```markdown
+# ❌ BAD: Hardcoded values (becomes outdated)
+
+- [ ] Category must be one of: ["code", "foundation", "language"]
+
+# ✅ GOOD: Schema reference (always current)
+
+- [ ] Category must be from schema enum (see `mdc.schema.json` → `properties.category.enum`)
+```
+
+### Schema Validation Tools
+
+**Recommended approach for maintaining schema synchronization:**
+
+1. **Use schema references** instead of hardcoded values
+2. **Create validation scripts** that check rule compliance against schema
+3. **Implement CI checks** that validate rules against current schema
+4. **Document schema changes** in rule update process
+5. **Use schema-aware templates** for new rule creation
+
+**Schema validation command example:**
+
+```bash
+# Validate all rules against current schema
+npx ajv validate -s mdc.schema.json -d "rules/*.mdx"
+```
+
 ## Rule Creation Process
 
-### Step 1: Schema Validation
+### Step 1: Pre-Creation Validation Checklist
+
+**BEFORE creating any rule, verify ALL of these:**
+
+#### ✅ Schema Compliance Check
+
+- [ ] **Category**: Must be from schema enum (see `mdc.schema.json` → `properties.category.enum`)
+- [ ] **Language**: Must be from schema enum (see `mdc.schema.json` → `properties.language.enum`)
+- [ ] **Audience**: All values must be from schema enum (see `mdc.schema.json` → `properties.audience.items.enum`)
+- [ ] **Enforcement CI**: Must be from schema enum (see `mdc.schema.json` → `properties.enforcement.properties.ci.enum`)
+- [ ] **Enforcement Lint**: Must be from schema enum (see `mdc.schema.json` → `properties.enforcement.properties.lint.enum`)
+- [ ] **Enforcement Scaffold**: Must be from schema enum (see `mdc.schema.json` → `properties.enforcement.properties.scaffold.enum`)
+
+#### ✅ Pattern Compliance Check
+
+- [ ] **ID Pattern**: Must match `^[a-z0-9]+(\\.[a-z0-9-]+)+$`
+- [ ] **Frameworks Pattern**: Each item must match `^[a-zA-Z0-9@/._-]+$`
+- [ ] **Tooling Pattern**: Each item must match `^[a-zA-Z0-9@/._-]+$`
+- [ ] **Supersedes Pattern**: Each item must match `^[a-z0-9]+(\\.[a-z0-9-]+)+$` (NO version syntax)
+- [ ] **Requires Pattern**: Each item must match `^[a-z0-9]+(\\.[a-z0-9-]+)+$`
+- [ ] **Conflicts Pattern**: Each item must match `^[a-z0-9]+(\\.[a-z0-9-]+)+$`
+
+#### ✅ Consistency Check
+
+- [ ] **Empty Arrays**: Use `[]` instead of `["none"]` for frameworks/tooling
+- [ ] **ID-Category Match**: First part of ID should match category
+- [ ] **Version Format**: Must be semantic version (e.g., "1.0.0")
+
+### Step 2: Schema Validation
 
 ```yaml
 # Template for new rules
