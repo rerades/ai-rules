@@ -78,20 +78,9 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": [
-          "react",
-          "astro",
-          "svelte",
-          "vue",
-          "nuxt",
-          "angular",
-          "lit",
-          "next",
-          "remix",
-          "node",
-          "express",
-          "none"
-        ]
+        "pattern": "^[a-zA-Z0-9@/._-]+$",
+        "minLength": 1,
+        "maxLength": 50
       },
       "uniqueItems": true
     },
@@ -99,32 +88,9 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": [
-          "eslint",
-          "prettier",
-          "vitest",
-          "jest",
-          "playwright",
-          "wdio",
-          "cypress",
-          "lighthouse",
-          "axe",
-          "pa11y",
-          "msw",
-          "pact",
-          "snyk",
-          "osv",
-          "husky",
-          "lint-staged",
-          "turbo",
-          "vite",
-          "webpack",
-          "rollup",
-          "parcel",
-          "pnpm",
-          "npm",
-          "yarn"
-        ]
+        "pattern": "^[a-zA-Z0-9@/._-]+$",
+        "minLength": 1,
+        "maxLength": 50
       },
       "uniqueItems": false
     },
