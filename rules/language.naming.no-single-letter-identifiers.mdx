@@ -1,0 +1,109 @@
+---
+id: language.naming.no-single-letter-identifiers
+version: 1.0.0
+title: "No Single-Letter Identifiers"
+description: "Disallow single-letter identifiers for variables, parameters, and arguments to improve readability and intent clarity across all programming languages."
+category: language
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "none"
+frameworks: []
+tooling: ["eslint", "prettier"]
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend", "backend", "fullstack"]
+severity: "low"
+alwaysApply: false
+globs:
+  [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.jsx",
+    "**/*.tsx",
+    "**/*.py",
+    "**/*.java",
+    "**/*.go",
+    "**/*.rs",
+  ]
+requires: []
+conflicts: []
+supersedes: []
+bundles: ["language/naming"]
+files:
+  [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.jsx",
+    "**/*.tsx",
+    "**/*.py",
+    "**/*.java",
+    "**/*.go",
+    "**/*.rs",
+  ]
+enforcement: { lint: "error", ci: "block", scaffold: "none" }
+order: 31
+tags: ["topic:naming", "topic:clarity", "lint:id-length"]
+owner: "language@tu-org.com"
+review: { lastReviewed: "2025-10-28", reviewCycleDays: 180 }
+license: "MIT"
+links: []
+---
+
+## Naming and Clarity
+
+### No single-letter identifiers
+
+- **Rule**: Do not use single-letter names for variables, parameters, or arguments (e.g., `a`, `e`, `s`). Use descriptive names that communicate intent.
+- **Motivation**: Improves readability, eases refactoring, and reduces ambiguity.
+
+Examples:
+
+```js
+// ❌ Bad
+export function normalizeAirport(a) {
+  return { code: String(a.code || "").toUpperCase() };
+}
+
+// ✅ Good
+export function normalizeAirport(rawAirport) {
+  return { code: String(rawAirport.code || "").toUpperCase() };
+}
+```
+
+```js
+// ❌ Bad
+selectEl.addEventListener("change", (e) => {
+  /* ... */
+});
+
+// ✅ Good
+selectEl.addEventListener("change", (event) => {
+  /* ... */
+});
+```
+
+- **Exceptions**: Short-lived and trivially local loop indices (`i`, `j`, `k`) or obvious, ephemeral intermediates used within ≤3 lines. Avoid outside that context.
+
+### ESLint (JavaScript/TypeScript)
+
+Use the core ESLint `id-length` rule to enforce this policy. Adjust exceptions to fit your codebase:
+
+```json
+{
+  "rules": {
+    "id-length": [
+      "error",
+      {
+        "min": 2,
+        "properties": "never",
+        "exceptions": ["i", "j", "k", "_", "T"]
+      }
+    ]
+  }
+}
+```
+
+Notes:
+
+- Keep `properties: "never"` so object property names like `x` in external APIs are not flagged.
+- If you use generic type parameters beyond `T`, configure your TypeScript ESLint `naming-convention` accordingly.
