@@ -1,0 +1,209 @@
+---
+id: code.declarative-dom-access
+version: 1.0.0
+title: "Declarative DOM Access (Vanilla JavaScript)"
+description: "Prefer semantic, declarative DOM references via data-* attributes and localized queries over classes/IDs."
+category: code
+scope: ["global", "repo", "package", "workspace", "app", "component"]
+language: "javascript"
+frameworks: []
+tooling: []
+lifecycle: "enforced"
+maturity: "stable"
+stability: "locked"
+audience: ["frontend"]
+severity: "medium"
+alwaysApply: true
+globs: ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx", "**/*.astro", "**/*.html"]
+requires: ["foundation.code-guidelines"]
+conflicts: []
+supersedes: []
+bundles: ["code/dom"]
+files: ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx", "**/*.astro", "**/*.html"]
+enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+order: 25
+inputs: {}
+tags: ["topic:dom", "topic:semantics", "a11y:roles"]
+owner: "rerades@siete3.com"
+review: { lastReviewed: "2025-10-28", reviewCycleDays: 180 }
+license: "MIT"
+links:
+  - {
+      rel: "docs",
+      href: "https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes",
+      title: "Using data-* attributes (MDN)",
+    }
+  - {
+      rel: "docs",
+      href: "https://html.spec.whatwg.org/multipage/semantics-other.html#embedding-custom-non-visible-data-with-the-data-*-attributes",
+      title: "HTML Standard: data-* attributes",
+    }
+  - {
+      rel: "related",
+      href: "foundation.code-guidelines",
+      description: "General code guidelines this builds upon",
+    }
+---
+
+## Cursor Rule: Declarative DOM Access (Vanilla JavaScript)
+
+## 🎯 Purpose
+
+Avoid using CSS classes or IDs to manipulate the DOM from JavaScript.
+Promote a **declarative**, **semantic**, and **self-documented** approach where the relationship between DOM and logic is based on **intention** rather than **structure or style**.
+
+---
+
+## 🚫 What Not to Do
+
+1. **Do not use CSS classes for logic**
+
+```js
+// ❌ Incorrect
+document.querySelector(".btn");
+panel.querySelector(".od-panel__list");
+```
+
+> Classes belong to the styling layer (CSS), not to behavior.
+> Using them ties logic to visual naming conventions and design refactors.
+
+1. **Do not use global IDs**
+
+```js
+// ❌ Incorrect
+document.getElementById("loginForm");
+document.querySelector("#header");
+```
+
+> IDs are global and break composability and reuse.
+> They should only be used for form associations (`label for`) or accessibility anchors.
+
+---
+
+## ✅ Recommended Approach
+
+### 1. Use `data-*` attributes to declare semantic intent
+
+```html
+<div data-panel>
+  <button data-ref="tab" data-tab="flights">Flights</button>
+  <ul data-ref="list"></ul>
+  <div data-ref="loading"></div>
+</div>
+```
+
+```js
+const refs = useRefs(document.querySelector("[data-panel]"), [
+  "tab",
+  "list",
+  "loading",
+]);
+```
+
+### 2. Centralize access with a declarative helper
+
+```js
+export function useRefs(root, names) {
+  const refs = {};
+  names.forEach((name) => {
+    const elements = root.querySelectorAll(`[data-ref="${name}"]`);
+    refs[name] = elements.length > 1 ? elements : elements[0];
+  });
+  return refs;
+}
+```
+
+Example:
+
+```js
+const { tab, list, loading } = useRefs(panel, ["tab", "list", "loading"]);
+tab.forEach((btn) =>
+  btn.addEventListener("click", () => (loading.textContent = "Loading..."))
+);
+```
+
+### 3. Keep the scope local
+
+Avoid querying the global document. Always scope within the component root.
+
+✅ `panel.querySelector('[data-ref="list"]')`
+❌ `document.querySelector('[data-ref="list"]')`
+
+---
+
+## 🧱 Naming Convention
+
+| Attribute Type | Usage                          | Example              |
+| -------------- | ------------------------------ | -------------------- |
+| `data-ref`     | Direct reference to an element | `data-ref="loading"` |
+| `data-role`    | Functional or semantic role    | `data-role="tab"`    |
+| `data-*`       | Domain or contextual data      | `data-tab="flights"` |
+| Prefixed       | Namespace to avoid collisions  | `data-od-ref="..."`  |
+
+> Attributes should describe **intent**, not **appearance**.
+
+---
+
+## 🧩 Motivation
+
+- **Decouples logic from styles** → allows CSS refactors without breaking JS.
+- **Improves semantics** → test tools and devs can understand intent.
+- **Scalable** → components can be repeated safely.
+- **Self-documented** → DOM itself describes behavior.
+- **Framework-agnostic** → works with pure HTML + JS.
+
+---
+
+## ⚙️ Example
+
+```html
+<section data-panel>
+  <header>
+    <button data-ref="tab" data-tab="flights">Flights</button>
+    <button data-ref="tab" data-tab="hotels">Hotels</button>
+  </header>
+
+  <div data-ref="content"></div>
+  <div data-ref="loading" hidden>Loading...</div>
+</section>
+
+<script type="module">
+  import { useRefs } from "./useRefs.js";
+
+  const panel = document.querySelector("[data-panel]");
+  const refs = useRefs(panel, ["tab", "content", "loading"]);
+
+  refs.tab.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      refs.loading.hidden = false;
+      refs.content.textContent = `Loading ${btn.dataset.tab}...`;
+    });
+  });
+</script>
+```
+
+---
+
+## ⚠️ Anti-patterns
+
+| Code                                            | Why It’s Wrong                         |
+| ----------------------------------------------- | -------------------------------------- |
+| `document.querySelector('.main-btn')`           | Classes belong to CSS layer            |
+| `document.getElementById('submit')`             | IDs are global and brittle             |
+| `document.querySelector('button:nth-child(2)')` | Fragile to DOM changes                 |
+| `querySelector('[role="button"]')`              | Roles are for accessibility, not logic |
+
+---
+
+## 🧠 Rule Summary
+
+```text
+RULE: Declarative DOM Access
+
+- ❌ Avoid class selectors.
+- ❌ Avoid IDs.
+- ✅ Use data-* for semantics and references.
+- ✅ Use helpers (useRefs) for structured access.
+- ✅ Always scope queries to local root.
+- ✅ Keep attributes descriptive of intent.
+```
