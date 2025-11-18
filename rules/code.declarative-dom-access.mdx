@@ -1,8 +1,8 @@
 ---
 id: code.declarative-dom-access
-version: 1.0.0
-title: "Declarative DOM Access (Vanilla JavaScript)"
-description: "Prefer semantic, declarative DOM references via data-* attributes and localized queries over classes/IDs."
+version: 2.0.0
+title: "Declarative DOM Access & Event Handling (Vanilla JS)"
+description: "Strictly enforce declarative DOM access using data-* attributes, mandatory event delegation, and centralized action registry. No classes, no IDs, no imperative lookups."
 category: code
 scope: ["global", "repo", "package", "workspace", "app", "component"]
 language: "javascript"
@@ -11,21 +11,22 @@ tooling: []
 lifecycle: "enforced"
 maturity: "stable"
 stability: "locked"
-audience: ["frontend"]
-severity: "medium"
+audience: ["frontend", "fullstack"]
+severity: "high"
 alwaysApply: true
 globs: ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx", "**/*.astro", "**/*.html"]
 requires: ["foundation.code-guidelines"]
 conflicts: []
-supersedes: []
+supersedes: ["code.declarative-dom-access@1.0.0"]
 bundles: ["code/dom"]
 files: ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx", "**/*.astro", "**/*.html"]
-enforcement: { lint: "warn", ci: "allow", scaffold: "none" }
+enforcement: { lint: "error", ci: "block", scaffold: "required" }
 order: 25
 inputs: {}
-tags: ["topic:dom", "topic:semantics", "a11y:roles"]
+tags:
+  ["topic:dom", "topic:event-handling", "topic:vanilla-js", "topic:semantics"]
 owner: "rerades@siete3.com"
-review: { lastReviewed: "2025-10-28", reviewCycleDays: 180 }
+review: { lastReviewed: "2025-01-20", reviewCycleDays: 90 }
 license: "MIT"
 links:
   - {
@@ -45,64 +46,66 @@ links:
     }
 ---
 
-## Cursor Rule: Declarative DOM Access (Vanilla JavaScript)
+# Rule: Declarative DOM Access & Event Handling (Vanilla JS)
 
-## 🎯 Purpose
+## Purpose
 
-Avoid using CSS classes or IDs to manipulate the DOM from JavaScript.
-Promote a **declarative**, **semantic**, and **self-documented** approach where the relationship between DOM and logic is based on **intention** rather than **structure or style**.
+Ensure that any JavaScript interacting with the DOM follows a **strictly declarative, stable, and maintainable pattern**.
 
----
+This rule **enforces** the use of data-attributes for element targeting, **disallows** class-based selectors for logic, **forbids** imperative DOM lookups scattered across the codebase, and **mandates** event delegation where appropriate.
 
-## 🚫 What Not to Do
-
-1. **Do not use CSS classes for logic**
-
-```js
-// ❌ Incorrect
-document.querySelector(".btn");
-panel.querySelector(".od-panel__list");
-```
-
-> Classes belong to the styling layer (CSS), not to behavior.
-> Using them ties logic to visual naming conventions and design refactors.
-
-1. **Do not use global IDs**
-
-```js
-// ❌ Incorrect
-document.getElementById("loginForm");
-document.querySelector("#header");
-```
-
-> IDs are global and break composability and reuse.
-> They should only be used for form associations (`label for`) or accessibility anchors.
+**This rule is MANDATORY and NON-NEGOTIABLE for projects of medium to large size.**
 
 ---
 
-## ✅ Recommended Approach
+## Motivation
 
-### 1. Use `data-*` attributes to declare semantic intent
+This approach provides critical benefits:
 
-```html
-<div data-panel>
-  <button data-ref="tab" data-tab="flights">Flights</button>
-  <ul data-ref="list"></ul>
-  <div data-ref="loading"></div>
-</div>
+- **Decouples logic from styles** → allows CSS refactors without breaking JS
+- **Improves semantics** → test tools and devs can understand intent
+- **Scalable** → components can be repeated safely
+- **Self-documented** → DOM itself describes behavior
+- **Framework-agnostic** → works with pure HTML + JS
+- **Avoids selector fragility** → prevents chaos typical of brittle selectors
+
+---
+
+## Element Selection
+
+### 1. All DOM elements **MUST** be referenced using `data-*` attributes
+
+**Allowed prefixes:**
+
+- `data-el="name"` → structural elements (primary pattern)
+- `data-action="name"` → event triggers (primary pattern)
+- `data-state="value"` → UI states
+- `data-id="value"` → stable identifiers when required
+- `data-ref="name"` → direct reference to an element (alternative pattern)
+- `data-role="name"` → functional or semantic role (alternative pattern)
+
+> **Note:** You can use prefixed attributes (e.g., `data-od-ref="..."`) to namespace and avoid collisions.
+
+### 2. The code **MUST NOT** use:
+
+- ❌ CSS classes to locate DOM nodes (`.querySelector('.class')`)
+- ❌ IDs as selectors (`#id`) unless an element is a global anchor (rare)
+- ❌ Text-based selection or DOM traversal that depends on layout structure
+- ❌ Accessing children by index (`children[0]`, `firstChild`, etc.)
+- ❌ Relying on DOM structure instead of explicit data-attributes
+
+### 3. All DOM querying **MUST** be done through utility functions
+
+**Pattern A: Simple utilities (REQUIRED for all files):**
+
+```javascript
+const $ = (selector, scope = document) => scope.querySelector(selector);
+const $$ = (selector, scope = document) => scope.querySelectorAll(selector);
 ```
 
-```js
-const refs = useRefs(document.querySelector("[data-panel]"), [
-  "tab",
-  "list",
-  "loading",
-]);
-```
+**Pattern B: Structured helper (RECOMMENDED for complex components):**
 
-### 2. Centralize access with a declarative helper
-
-```js
+```javascript
 export function useRefs(root, names) {
   const refs = {};
   names.forEach((name) => {
@@ -113,48 +116,223 @@ export function useRefs(root, names) {
 }
 ```
 
-Example:
+**Cursor MUST auto-generate these utilities in any file that interacts with the DOM if not present.**
 
-```js
-const { tab, list, loading } = useRefs(panel, ["tab", "list", "loading"]);
-tab.forEach((btn) =>
-  btn.addEventListener("click", () => (loading.textContent = "Loading..."))
-);
-```
+### 4. Keep the scope local
 
-### 3. Keep the scope local
+**MUST** scope queries within component roots. **MUST NOT** query the global document unnecessarily.
 
-Avoid querying the global document. Always scope within the component root.
-
-✅ `panel.querySelector('[data-ref="list"]')`
-❌ `document.querySelector('[data-ref="list"]')`
+✅ `panel.querySelector('[data-el="list"]')`
+❌ `document.querySelector('[data-el="list"]')`
 
 ---
 
-## 🧱 Naming Convention
+## Event Handling
 
-| Attribute Type | Usage                          | Example              |
-| -------------- | ------------------------------ | -------------------- |
-| `data-ref`     | Direct reference to an element | `data-ref="loading"` |
-| `data-role`    | Functional or semantic role    | `data-role="tab"`    |
-| `data-*`       | Domain or contextual data      | `data-tab="flights"` |
-| Prefixed       | Namespace to avoid collisions  | `data-od-ref="..."`  |
+### 1. Events **MUST** be attached using event delegation whenever the target elements can be dynamic or repeated
+
+### 2. Global delegation pattern (REQUIRED):
+
+```javascript
+document.addEventListener("click", (event) => {
+  const el = event.target.closest("[data-action]");
+  if (!el) return;
+
+  const action = el.dataset.action;
+  handleAction(action, el, event);
+});
+```
+
+### 3. Direct `addEventListener` is **ONLY** acceptable when:
+
+- The element is unique and static
+- The number of listeners is low
+- The element cannot be delegated safely
+
+### 4. Each action **MUST** map to a function inside a central registry:
+
+```javascript
+const actions = {
+  save: (el, evt) => {
+    /* ... */
+  },
+  delete: (el, evt) => {
+    /* ... */
+  },
+  toggle: (el, evt) => {
+    /* ... */
+  },
+};
+
+function handleAction(action, el, evt) {
+  if (actions[action]) actions[action](el, evt);
+}
+```
+
+---
+
+## DOM Structure Requirements
+
+### 1. All HTML components **MUST** expose their interactive elements using data-attributes
+
+**Example:**
+
+```html
+<div data-el="todo-item">
+  <button data-action="delete">Delete</button>
+  <button data-action="edit">Edit</button>
+</div>
+```
+
+### 2. The JavaScript **MUST NEVER** rely on CSS or layout structure to infer meaning
+
+### 3. If a component requires multiple internal references, wrap all selectors inside a factory:
+
+**Pattern A: Using simple utilities:**
+
+```javascript
+function getTodoDom(root) {
+  return {
+    checkbox: $('[data-el="checkbox"]', root),
+    label: $('[data-el="label"]', root),
+    actions: $$("[data-action]", root),
+  };
+}
+```
+
+**Pattern B: Using useRefs helper:**
+
+```javascript
+const panel = document.querySelector("[data-panel]");
+const refs = useRefs(panel, ["tab", "content", "loading"]);
+
+refs.tab.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    refs.loading.hidden = false;
+    refs.content.textContent = `Loading ${btn.dataset.tab}...`;
+  });
+});
+```
+
+---
+
+## Naming Conventions
+
+| Attribute Type | Usage                          | Example                |
+| -------------- | ------------------------------ | ---------------------- |
+| `data-el`      | Structural elements            | `data-el="todo-item"`  |
+| `data-action`  | Event triggers                 | `data-action="delete"` |
+| `data-state`   | UI states                      | `data-state="loading"` |
+| `data-id`      | Stable identifiers             | `data-id="user-123"`   |
+| `data-ref`     | Direct reference to an element | `data-ref="loading"`   |
+| `data-role`    | Functional or semantic role    | `data-role="tab"`      |
+| Prefixed       | Namespace to avoid collisions  | `data-od-ref="..."`    |
 
 > Attributes should describe **intent**, not **appearance**.
 
 ---
 
-## 🧩 Motivation
+## Forbidden Patterns
 
-- **Decouples logic from styles** → allows CSS refactors without breaking JS.
-- **Improves semantics** → test tools and devs can understand intent.
-- **Scalable** → components can be repeated safely.
-- **Self-documented** → DOM itself describes behavior.
-- **Framework-agnostic** → works with pure HTML + JS.
+**The following patterns are STRICTLY FORBIDDEN:**
+
+- ❌ Selecting by CSS class for logic
+- ❌ Selecting by ID unless justified with `// exception: global anchor`
+- ❌ Inline event handlers (`onclick="..."`)
+- ❌ Imperative lookup scattered in the code:
+
+```javascript
+// ❌ FORBIDDEN
+const el = document.querySelector(".foo .bar .baz");
+```
+
+- ❌ Accessing children by index (`children[0]`, `firstChild`, etc.)
+- ❌ Relying on DOM structure instead of explicit data-attributes
+- ❌ Using structural selectors that depend on layout:
+
+```javascript
+// ❌ FORBIDDEN
+document.querySelector("button:nth-child(2)");
+```
+
+- ❌ Using accessibility roles for logic:
+
+```javascript
+// ❌ FORBIDDEN - roles are for accessibility, not logic
+querySelector('[role="button"]');
+```
 
 ---
 
-## ⚙️ Example
+## Enforcement Notes for Cursor
+
+**Whenever Cursor generates, rewrites, or modifies DOM-related JS:**
+
+1. **Replace** all class-based selectors with data-attributes
+2. **Introduce** missing `data-el` or `data-action` in HTML automatically if not present
+3. **Reject** attempts to use IDs unless the label `// exception: global anchor` is present
+4. **Suggest** delegation when more than one listener is added
+5. **Refactor** imperative DOM lookups into declarative utilities
+6. **Auto-generate** `$` and `$$` utilities if missing
+7. **Prefer** local scoping over global document queries
+
+---
+
+## Examples
+
+### Example 1: Simple Component with Event Delegation
+
+**HTML:**
+
+```html
+<div data-el="user-panel">
+  <button data-action="login">Login</button>
+  <button data-action="logout">Logout</button>
+</div>
+```
+
+**JavaScript:**
+
+```javascript
+// Required utility functions
+const $ = (selector, scope = document) => scope.querySelector(selector);
+const $$ = (selector, scope = document) => scope.querySelectorAll(selector);
+
+// Central action registry
+const actions = {
+  login: (el, evt) => {
+    console.log("Logging in");
+    // Login logic here
+  },
+  logout: (el, evt) => {
+    console.log("Logging out");
+    // Logout logic here
+  },
+};
+
+// Action handler
+function handleAction(action, el, evt) {
+  if (actions[action]) {
+    actions[action](el, evt);
+  }
+}
+
+// Global event delegation (REQUIRED)
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+
+  const action = el.dataset.action;
+  handleAction(action, el, e);
+});
+
+// Component-specific DOM access (if needed)
+const panel = $('[data-el="user-panel"]');
+```
+
+### Example 2: Complex Component with useRefs Pattern
+
+**HTML:**
 
 ```html
 <section data-panel>
@@ -166,44 +344,100 @@ Avoid querying the global document. Always scope within the component root.
   <div data-ref="content"></div>
   <div data-ref="loading" hidden>Loading...</div>
 </section>
+```
 
-<script type="module">
-  import { useRefs } from "./useRefs.js";
+**JavaScript:**
 
-  const panel = document.querySelector("[data-panel]");
-  const refs = useRefs(panel, ["tab", "content", "loading"]);
+```javascript
+import { useRefs } from "./useRefs.js";
 
-  refs.tab.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      refs.loading.hidden = false;
-      refs.content.textContent = `Loading ${btn.dataset.tab}...`;
-    });
+const panel = document.querySelector("[data-panel]");
+const refs = useRefs(panel, ["tab", "content", "loading"]);
+
+refs.tab.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    refs.loading.hidden = false;
+    refs.content.textContent = `Loading ${btn.dataset.tab}...`;
   });
-</script>
+});
+```
+
+### Example 3: Factory Pattern for Component DOM Access
+
+**HTML:**
+
+```html
+<div data-el="todo-item">
+  <input type="checkbox" data-el="checkbox" />
+  <label data-el="label">Task description</label>
+  <button data-action="delete">Delete</button>
+  <button data-action="edit">Edit</button>
+</div>
+```
+
+**JavaScript:**
+
+```javascript
+const $ = (selector, scope = document) => scope.querySelector(selector);
+const $$ = (selector, scope = document) => scope.querySelectorAll(selector);
+
+function getTodoDom(root) {
+  return {
+    checkbox: $('[data-el="checkbox"]', root),
+    label: $('[data-el="label"]', root),
+    actions: $$("[data-action]", root),
+  };
+}
+
+// Usage
+const todoItem = $('[data-el="todo-item"]');
+const dom = getTodoDom(todoItem);
+
+dom.checkbox.addEventListener("change", () => {
+  dom.label.style.textDecoration = dom.checkbox.checked
+    ? "line-through"
+    : "none";
+});
 ```
 
 ---
 
-## ⚠️ Anti-patterns
+## Anti-patterns Reference
 
-| Code                                            | Why It’s Wrong                         |
+| Code                                            | Why It's Wrong                         |
 | ----------------------------------------------- | -------------------------------------- |
 | `document.querySelector('.main-btn')`           | Classes belong to CSS layer            |
 | `document.getElementById('submit')`             | IDs are global and brittle             |
 | `document.querySelector('button:nth-child(2)')` | Fragile to DOM changes                 |
 | `querySelector('[role="button"]')`              | Roles are for accessibility, not logic |
+| `element.children[0]`                           | Depends on DOM structure               |
+| `element.firstChild`                            | Fragile to whitespace changes          |
+| `onclick="handleClick()"`                       | Inline handlers are forbidden          |
 
 ---
 
-## 🧠 Rule Summary
+## Summary
 
-```text
-RULE: Declarative DOM Access
+**This rule is MANDATORY and NON-NEGOTIABLE for projects of medium to large size.**
 
-- ❌ Avoid class selectors.
-- ❌ Avoid IDs.
-- ✅ Use data-* for semantics and references.
-- ✅ Use helpers (useRefs) for structured access.
-- ✅ Always scope queries to local root.
-- ✅ Keep attributes descriptive of intent.
-```
+### ✅ **MUST**:
+
+- Use `data-el`, `data-action`, `data-state`, `data-id` attributes (primary pattern)
+- Use `data-ref`, `data-role` attributes (alternative pattern for structured access)
+- Use `$` and `$$` utility functions for all DOM queries
+- Implement event delegation for dynamic/repeated elements
+- Centralize actions in a registry
+- Scope queries to local component roots
+- Use factory functions or `useRefs` for complex components
+
+### ❌ **MUST NOT**:
+
+- Use CSS classes for logic
+- Use IDs (except global anchors with explicit justification)
+- Scatter imperative DOM lookups
+- Rely on DOM structure or CSS for element selection
+- Use inline event handlers
+- Access children by index
+- Use structural selectors that depend on layout
+
+**Violations of this rule will result in code rejection and mandatory refactoring.**
